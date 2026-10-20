@@ -1,0 +1,53 @@
+---
+description: Jager-C2 core project rules - identity, determinism, secrets, verification. Always applies.
+alwaysApply: true
+---
+
+# Jager-C2 Core Rules
+
+Canonical source: [AGENTS.md](../../AGENTS.md). This file mirrors the always-relevant subset.
+
+## Identity
+
+- Product: **Jager-C2**. Never reintroduce legacy/upstream names.
+- Go modules: `github.com/0xhackerfren/Jager-C2/teamserver` and `/client/cli`.
+- Env prefix `JAGER_`; API header `X-Jager-C2-Api-Key`; proto package `jager`.
+
+## Determinism first
+
+- No time, randomness, or network lookups in derivation paths (profiles, IOC generation).
+- Profile builds must be reproducible from `(engagement_id, template, build_nonce)`.
+- Read files, run commands, verify output. Never assume success.
+
+## Secrets (non-negotiable)
+
+- Never commit API keys, build secrets, AES keys/IVs, binaries, logs, or `.db` files.
+- Generated material goes to `data/` or `builds/`; logs to `logs/` (all gitignored).
+- If a secret is found in the tree or history: stop, rotate, report before any push.
+
+## Task contract sync
+
+Task type IDs exist in three places that must stay synchronized:
+
+1. `teamserver/proto/tasks.proto` (canonical)
+2. `implant/include/config.h`, `implant-linux/include/config.h`
+3. `capability-registry.yaml`
+
+After touching any of them:
+
+```bash
+python tests/contract/test_task_dispatch.py
+python scripts/validate-c2-capabilities.py
+```
+
+Regexes over task IDs must use `TASK_[A-Z0-9_]+` (names contain digits, e.g. `TASK_P2P_LISTEN`).
+
+## Pre-push verification
+
+```bash
+python -m compileall -q mcp builder tests
+cd teamserver && go build ./... && go test ./...
+cd ../client/cli && go mod tidy && go build
+rg -i "suzu" .            # must print nothing
+rg "[0-9a-f]{64}" data/ teamserver/ 2>/dev/null   # must print nothing
+```

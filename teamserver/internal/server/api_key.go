@@ -54,10 +54,10 @@ func EnsureMgmtAPIKey(workspace, dbPath string, logger *zap.Logger) string {
 
 func apiKeyFilePath(workspace, dbPath string) string {
 	if workspace != "" {
-		return filepath.Join(workspace, "jager", "data", "api-key.txt")
+		return filepath.Join(workspace, "data", "api-key.txt")
 	}
 	if dbPath != "" {
 		return filepath.Join(filepath.Dir(dbPath), "api-key.txt")
 	}
-	return filepath.Join("jager", "data", "api-key.txt")
+	return filepath.Join("data", "api-key.txt")
 }

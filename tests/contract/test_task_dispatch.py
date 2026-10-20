@@ -20,7 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 def parse_proto_tasks(proto_path: Path) -> dict[str, int]:
     """Parse TASK_* enum entries from tasks.proto."""
     tasks = {}
-    pattern = re.compile(r'^\s*(TASK_[A-Z_]+)\s*=\s*(\d+)\s*;', re.MULTILINE)
+    pattern = re.compile(r'^\s*(TASK_[A-Z0-9_]+)\s*=\s*(\d+)\s*;', re.MULTILINE)
 
     content = proto_path.read_text()
     for match in pattern.finditer(content):
@@ -38,7 +38,7 @@ def parse_proto_tasks(proto_path: Path) -> dict[str, int]:
 def parse_implant_tasks(config_h: Path) -> dict[str, int]:
     """Parse #define TASK_* from config.h."""
     tasks = {}
-    pattern = re.compile(r'^\s*#define\s+(TASK_[A-Z_]+)\s+(\d+)', re.MULTILINE)
+    pattern = re.compile(r'^\s*#define\s+(TASK_[A-Z0-9_]+)\s+(\d+)', re.MULTILINE)
 
     content = config_h.read_text()
     for match in pattern.finditer(content):

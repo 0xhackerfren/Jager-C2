@@ -3,7 +3,6 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-REPO_ROOT="$(dirname "$PROJECT_DIR")"
 TEAMSERVER="$PROJECT_DIR/bin/jager-server"
 IMPLANT="$PROJECT_DIR/implant-linux/bin/implant-linux"
 API_KEY_FILE="$PROJECT_DIR/data/api-key.txt"
@@ -54,7 +53,7 @@ if [ -z "${JAGER_TS_URL:-}" ]; then
 
     log "Starting embedded teamserver..."
     mkdir -p "$PROJECT_DIR/data"
-    "$TEAMSERVER" --no-tls --db ":memory:" --workspace "$REPO_ROOT" \
+    "$TEAMSERVER" --no-tls --db ":memory:" --workspace "$PROJECT_DIR" \
         --mgmt "127.0.0.1:$TS_PORT" --grpc "127.0.0.1:$TS_GRPC" \
         > "$PROJECT_DIR/data/e2e-ts.log" 2>&1 &
     TS_PID=$!

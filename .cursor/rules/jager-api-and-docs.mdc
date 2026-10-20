@@ -1,0 +1,41 @@
+---
+description: API surface and docs truth rules for Jager-C2
+globs: "**/{rest_client.go,grpc_client.py,management.go,main.go,server.py,README.md,OPERATOR_GUIDE.md,ARCHITECTURE.md}"
+alwaysApply: false
+---
+
+# API Surface and Docs Truth
+
+## Management API
+
+- All REST endpoints live under `/mgmt/*` in `teamserver/internal/server/management.go`.
+- Before adding a client call (CLI in `client/cli/`, MCP in `mcp/grpc_client.py`), verify the route exists there. Do not invent endpoints.
+- CLI and MCP must use identical endpoint paths and JSON field names (e.g. kill uses `{"id": ...}`).
+- Task payloads use numeric `TaskType` values from `teamserver/proto/tasks.proto`.
+
+## Docs truth
+
+If a change implements or removes a capability, update in the same change:
+
+- `README.md` (user-facing behavior, Known Limitations)
+- `docs/ARCHITECTURE.md` (component claims)
+- `docs/OPERATOR_GUIDE.md` (commands and endpoints)
+- `CHANGELOG.md` (user-visible changes)
+
+Never document aspirational features as existing. Verify documented commands exist before writing them into guides.
+
+## Examples
+
+```bash
+# BAD: adding a client call to an endpoint that does not exist
+mgmtPost("/mgmt/pivots/add", ...)   # route is /mgmt/pivots/socks/start or /mgmt/pivots/portfwd
+
+# GOOD: match the server route
+mgmtPost("/mgmt/build/implant", ...)
+
+# BAD: regex that silently drops task names with digits
+re.compile(r"(TASK_[A-Z_]+)")
+
+# GOOD
+re.compile(r"(TASK_[A-Z0-9_]+)")
+```

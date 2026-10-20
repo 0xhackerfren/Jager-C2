@@ -1,0 +1,29 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Shell scripts must be LF
+*.sh text eol=lf
+*.py text eol=lf
+*.go text eol=lf
+*.c text eol=lf
+*.h text eol=lf
+*.proto text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
+*.mod text eol=lf
+*.sum text eol=lf
+
+# Windows scripts must be CRLF
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binaries
+*.a binary
+*.exe binary
+*.dll binary
+*.enc binary
+*.png binary
+*.ico binary

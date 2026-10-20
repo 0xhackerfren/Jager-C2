@@ -28,7 +28,7 @@ services:
     container_name: jager-mcp
     restart: unless-stopped
     ports:
-      - "8080:8000"    # MCP SSE (uvicorn default is 8000)
+      - "8080:8000"    # MCP SSE (container listens on 8000)
     environment:
       - JAGER_MGMT_URL=http://teamserver:31338
     depends_on:

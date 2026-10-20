@@ -119,14 +119,14 @@ class GRPCClient:
         return data.get("beacons", []) or []
 
     async def interact_session(self, session_id: str) -> Dict[str, Any]:
+        """Sessions are stateless over the REST management API.
+
+        The gRPC service exposes InteractSession; over REST there is nothing to
+        call. Tasking is done via queue_task()."""
         if not await self.ensure_connected():
             return {"error": "not connected to teamserver", "session_id": session_id}
-        try:
-            resp = await self._client.post("/mgmt/session/interact",
-                                           json={"id": session_id})
-            return resp.json()
-        except Exception as e:
-            return {"error": f"interact_session failed: {e}", "session_id": session_id}
+        return {"success": True, "session_id": session_id,
+                "note": "REST sessions are stateless; use queue_task to task this session"}
 
     async def kill_session(self, session_id: str, force: bool = False) -> Dict[str, Any]:
         if not await self.ensure_connected():
@@ -336,8 +336,15 @@ class GRPCClient:
         elif method == "AddPivot":
             if not await self.ensure_connected():
                 return {"error": "not connected to teamserver - cannot add pivot", "success": False}
+            # Map to the pivot-specific REST endpoints the teamserver exposes.
+            pivot_kind = str(kwargs.get("kind", kwargs.get("type", "socks"))).lower()
             try:
-                resp = await self._client.post("/mgmt/pivots/add", json=kwargs)
+                if pivot_kind == "portfwd":
+                    resp = await self._client.post("/mgmt/pivots/portfwd", json=kwargs)
+                elif pivot_kind == "socks_stop":
+                    resp = await self._client.post("/mgmt/pivots/socks/stop", json=kwargs)
+                else:
+                    resp = await self._client.post("/mgmt/pivots/socks/start", json=kwargs)
                 return resp.json()
             except Exception as e:
                 return {"error": f"AddPivot failed: {e}", "success": False}

@@ -153,7 +153,7 @@ _CAMPAIGN_STORE: Dict[str, Any] = {}
 
 def _campaigns_file() -> Path:
     ws = os.environ.get("HARNESS_WORKSPACE", os.environ.get("JAGER_WORKSPACE", "."))
-    p = Path(ws) / "jager" / "data" / "campaigns.jsonl"
+    p = Path(ws) / "data" / "campaigns.jsonl"
     p.parent.mkdir(parents=True, exist_ok=True)
     return p
 

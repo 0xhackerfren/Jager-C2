@@ -1,0 +1,35 @@
+---
+description: Kanban board and issue workflow for Jager-C2 development
+globs: "**/*.md"
+alwaysApply: false
+---
+
+# Kanban Workflow (Jager-C2)
+
+Full rules: [AGENTS.md](../../AGENTS.md) section "Kanban board workflow".
+
+## Board
+
+GitHub Projects board "Jager-C2 Roadmap" linked in README. Columns:
+Backlog -> Ready -> In Progress (max 1 per agent) -> In Review -> Done.
+
+## Labels
+
+- Priority: `priority/p1`, `priority/p2`, `priority/p3`
+- Area: `area/teamserver`, `area/implant`, `area/mcp`, `area/builder`, `area/cli`, `area/ci`, `area/docs`
+- Type: `bug`, `enhancement`, `documentation`, `good first issue`
+
+## Agent loop
+
+1. Pick the highest-priority unassigned item in Ready: `gh issue list -R 0xhackerfren/Jager-C2`
+2. Assign yourself, move to In Progress
+3. Work; if blocked, comment on the issue and move back to Ready
+4. PR with `Fixes #N`; CI green; card to In Review
+5. Merge: card to Done, issue closes
+
+## Rules
+
+- One item in progress per agent
+- Too-large tasks get split into child issues referencing the parent
+- New discovered work becomes an issue with labels, never just a commit message
+- Project commands (`gh project ...`) require the `project` scope on the gh token

@@ -155,6 +155,8 @@ pytest tests/
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/OPERATOR_GUIDE.md](docs/OPERATOR_GUIDE.md) for details.
 
+Development workflow, board, and agent rules: [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md), and the [project kanban board](https://github.com/0xhackerfren/Jager-C2/projects) track all open work.
+
 ## Roadmap
 
 - AI BOF generation pipeline

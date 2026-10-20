@@ -6,33 +6,11 @@ import json
 import logging
 import os
 import sys
-import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
 _JAGER_ROOT = _SCRIPT_DIR.parent
-_WORKSPACE = _JAGER_ROOT.parent
-_DEBUG_LOG = _WORKSPACE / ".cursor" / "debug-11ac4f.log"
-
-
-def _agent_log(message: str, data: dict, hypothesis_id: str) -> None:
-    # #region agent log
-    try:
-        payload = {
-            "sessionId": "11ac4f",
-            "timestamp": int(time.time() * 1000),
-            "location": "jager/mcp/server.py",
-            "message": message,
-            "data": data,
-            "hypothesisId": hypothesis_id,
-            "runId": os.environ.get("JAGER_RESTART", "startup"),
-        }
-        with _DEBUG_LOG.open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps(payload) + "\n")
-    except OSError:
-        pass
-    # #endregion
 
 
 def _sanitize_sys_path() -> None:
@@ -54,25 +32,14 @@ def _sanitize_sys_path() -> None:
         sys.path.append(str(_SCRIPT_DIR))
 
 
-_agent_log(
-    "pre-sanitize startup",
-    {"sys_path_head": sys.path[:6], "cwd": os.getcwd(), "pythonpath": os.environ.get("PYTHONPATH", "")},
-    "H2",
-)
 _sanitize_sys_path()
 
 try:
     import mcp as _pip_mcp  # noqa: F401
-
-    _mcp_origin = getattr(_pip_mcp, "__file__", "unknown")
-except Exception as exc:  # pragma: no cover - debug only
-    _mcp_origin = f"import failed: {exc}"
-
-_agent_log("post-sanitize mcp resolve", {"mcp_origin": _mcp_origin, "sys_path_head": sys.path[:6]}, "H2")
+except Exception as _exc:  # pragma: no cover - diagnostic only
+    logging.getLogger("jager.mcp").debug("pip mcp package import failed: %s", _exc)
 
 from fastmcp import FastMCP
-
-_agent_log("fastmcp import ok", {"fastmcp": "loaded"}, "H3")
 
 try:
     from .grpc_client import GRPCClient
@@ -136,7 +103,7 @@ def _register_meta_tools() -> None:
                         "implant_commands": "exec_* / lateral_* (requires session_id)",
                     },
                     "registry_tools": registry.tool_count,
-                    "note": "Start teamserver with docker-compose in jager/deploy when available.",
+                    "note": "Start teamserver with docker-compose in deploy/ when available.",
                 },
                 indent=2,
             )
@@ -283,7 +250,6 @@ _register_meta_tools()
 
 
 def main():
-    _agent_log("main() entered", {"transport": os.environ.get("MCP_TRANSPORT", "stdio")}, "H1")
     transport = os.environ.get("MCP_TRANSPORT", "stdio")
     if transport == "stdio":
         mcp.run()

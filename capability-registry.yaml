@@ -284,6 +284,13 @@ tasks:
     os: [windows]
     status: stub
 
+  - id: TASK_TOKEN_RUNAS
+    type: 67
+    handler: task_token_runas
+    mcp_tool: c2_token_runas
+    os: [windows]
+    status: stub
+
   - id: TASK_SLEEP_MASK
     type: 70
     handler: task_sleep_mask
@@ -315,6 +322,13 @@ tasks:
   - id: TASK_MODULE_STOMP
     type: 74
     handler: task_module_stomp
+    mcp_tool: c2_queue_task
+    os: [windows]
+    status: stub
+
+  - id: TASK_THREADLESS_INJECT
+    type: 75
+    handler: task_threadless_inject
     mcp_tool: c2_queue_task
     os: [windows]
     status: stub
@@ -444,3 +458,31 @@ tasks:
     mcp_tool: c2_p2p_relay
     os: [windows]
     status: implemented
+
+  - id: TASK_DEFENSE_CLEAR_EVENTLOG
+    type: 113
+    handler: task_defense_clear_eventlog
+    mcp_tool: c2_queue_task
+    os: [windows]
+    status: stub
+
+  - id: TASK_ARP_SCAN
+    type: 114
+    handler: task_arp_scan
+    mcp_tool: c2_queue_task
+    os: [windows, linux]
+    status: stub
+
+  - id: TASK_RPORTFWD_ADD
+    type: 115
+    handler: task_rportfwd_add
+    mcp_tool: c2_queue_task
+    os: [windows]
+    status: stub
+
+  - id: TASK_RPORTFWD_REMOVE
+    type: 116
+    handler: task_rportfwd_remove
+    mcp_tool: c2_queue_task
+    os: [windows]
+    status: stub

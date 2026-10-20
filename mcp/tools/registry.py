@@ -11,7 +11,7 @@ import logging
 
 logger = logging.getLogger("jager.tools.registry")
 
-# Tool modules - loaded relative to jager/mcp/ on sys.path
+# Tool modules - loaded relative to mcp/ on sys.path
 TOOL_MODULES = [
     "tools.sessions",
     "tools.execution",

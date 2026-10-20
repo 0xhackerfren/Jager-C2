@@ -48,11 +48,10 @@ var (
 func buildSecretPath() string {
 	for _, env := range []string{"JAGER_WORKSPACE", "HARNESS_WORKSPACE"} {
 		if ws := os.Getenv(env); ws != "" {
-			return filepath.Join(ws, "jager", "data", "build-secret.txt")
+			return filepath.Join(ws, "data", "build-secret.txt")
 		}
 	}
 	candidates := []string{
-		filepath.Join("jager", "data", "build-secret.txt"),
 		filepath.Join("data", "build-secret.txt"),
 	}
 	for _, p := range candidates {

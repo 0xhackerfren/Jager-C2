@@ -142,10 +142,10 @@ func (s *APIKeyStore) allOperators() []*OperatorKey {
 
 func operatorKeysFilePath(workspace, dbPath string) string {
 	if workspace != "" {
-		return filepath.Join(workspace, "jager", "data", "operator-keys.json")
+		return filepath.Join(workspace, "data", "operator-keys.json")
 	}
 	if dbPath != "" {
 		return filepath.Join(filepath.Dir(dbPath), "operator-keys.json")
 	}
-	return filepath.Join("jager", "data", "operator-keys.json")
+	return filepath.Join("data", "operator-keys.json")
 }

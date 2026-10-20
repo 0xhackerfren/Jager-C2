@@ -170,7 +170,7 @@ func (s *Server) Start(ctx context.Context) {
 	if s.script != nil {
 		s.script.Start()
 		if s.cfg.Workspace != "" {
-			hooksDir := filepath.Join(s.cfg.Workspace, "jager", "hooks")
+			hooksDir := filepath.Join(s.cfg.Workspace, "hooks")
 			if err := s.script.LoadHooksFromDir(hooksDir); err != nil && !os.IsNotExist(err) {
 				s.logger.Warn("load scripting hooks", zap.Error(err))
 			}

@@ -10,11 +10,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy MCP server code (as jager_mcp to avoid collision with installed 'mcp' package)
 COPY mcp/ ./jager_mcp/
 COPY builder/ ./builder/
-COPY __init__.py ./
 
-EXPOSE 8080
+EXPOSE 8000
 
 ENV JAGER_MGMT_URL=http://teamserver:31338
 ENV PYTHONPATH=/app
+# Run as an SSE server inside Docker (stdio is for local agent harnesses)
+ENV MCP_TRANSPORT=sse
+ENV MCP_HOST=0.0.0.0
+ENV MCP_PORT=8000
 
 CMD ["python", "-c", "from jager_mcp.server import main; main()"]

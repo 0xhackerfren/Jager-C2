@@ -16,12 +16,22 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-TEAMSERVER_BIN = REPO_ROOT / "teamserver" / "jager-server"
+TEAMSERVER_BIN_CANDIDATES = [
+    REPO_ROOT / "bin" / "jager-server",
+    REPO_ROOT / "teamserver" / "jager-server",
+]
 TEAMSERVER_REST_PORT = 31338
 TEAMSERVER_GRPC_PORT = 31337
 
-sys.path.insert(0, str(REPO_ROOT.parent))
+sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "mcp"))
+
+
+def _teamserver_bin():
+    for cand in TEAMSERVER_BIN_CANDIDATES:
+        if cand.exists():
+            return cand
+    return TEAMSERVER_BIN_CANDIDATES[0]
 
 
 def _port_open(port: int, host: str = "127.0.0.1", timeout: float = 1.0) -> bool:
@@ -58,7 +68,8 @@ def teamserver():
         }
         return
 
-    if not TEAMSERVER_BIN.exists():
+    teamserver_bin = _teamserver_bin()
+    if not teamserver_bin.exists():
         pytest.skip("teamserver binary not built")
 
     db_path = REPO_ROOT / "data" / "ci-test.db"
@@ -66,10 +77,10 @@ def teamserver():
 
     proc = subprocess.Popen(
         [
-            str(TEAMSERVER_BIN),
+            str(teamserver_bin),
             "--no-tls",
             "--db", str(db_path),
-            "--workspace", str(REPO_ROOT.parent),
+            "--workspace", str(REPO_ROOT),
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,

@@ -33,6 +33,10 @@ data/builds/
 *.db-shm
 *.db-wal
 
+# Runtime logs
+logs/
+*.log
+
 # Python artifacts
 __pycache__/
 *.pyc

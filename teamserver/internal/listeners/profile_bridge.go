@@ -22,8 +22,8 @@ func malleableProfileFromPB(pbProf *pb.MalleableProfile) (*malleable.Profile, er
 	}
 
 	candidates := []string{
-		"jager/data/builds/profile.json",
-		"jager/builds/profile.json",
+		"data/builds/profile.json",
+		"builds/profile.json",
 	}
 	ws := os.Getenv("HARNESS_WORKSPACE")
 	if ws == "" {

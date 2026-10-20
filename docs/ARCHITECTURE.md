@@ -2,128 +2,113 @@
 
 ## Overview
 
-Jager-C2 is an agentic-first Command and Control framework designed for professional red team operations. It provides feature parity with Cobalt Strike and Sliver while adding AI-native capabilities and per-engagement polymorphic evasion.
+Jager-C2 is an agentic-first command-and-control framework for authorized red team operations. It pairs a Go gRPC teamserver with hardened C implants, a polymorphic Python build pipeline, and an MCP server that exposes the framework to AI agents.
 
 ## Component Architecture
 
 ```
-+-------------------+     gRPC      +-------------------+
-|   Operator CLI    | <-----------> |    Teamserver     |
-|   (Go cobra)     |               |    (Go + gRPC)    |
-+-------------------+               +-------------------+
-                                           |
-+-------------------+     gRPC      +------+------+
-|   MCP Server      | <-----------> |  Listeners  |
-|   (Python)        |               +-------------+
-+-------------------+               | HTTPS | DNS |
-        |                           | SMB   | TCP |
-        v                           +------+------+
-+-------------------+                      |
-|   AI Agent        |               +------v------+
-|   (Cursor/LLM)   |               |   Implant   |
-+-------------------+               |   (C/ASM)   |
-                                    +-------------+
++-------------------+  REST /mgmt/*  +-------------------+
+|   Operator CLI    | <------------> |    Teamserver     |
+|   (Go cobra)      |      HTTP      |    (Go + gRPC)    |
++-------------------+                +---------+---------+
+        |                                      |
++-------------------+  REST /mgmt/*  +--------v--------+
+|   MCP Server      | <------------> |    Listeners    |
+|   (Python)        |      HTTP      | HTTPS/DNS/SMB/  |
++-------------------+                | TCP/External    |
+        |                            +---------+-------+
++-------------------+                          |
+|   AI Agent        |                +---------v-------+
+|   (any MCP host)  |                |     Implant     |
++-------------------+                |   (C + ASM)     |
+                                     +-----------------+
 ```
+
+Both the operator CLI and the MCP server talk to the teamserver over the REST
+management API (default port 31338). Operators authenticate with the
+`X-Jager-C2-Api-Key` header; implants connect to listeners on separate ports.
 
 ## Teamserver (Go)
 
-The teamserver is the core orchestration engine:
+The teamserver is the core orchestration engine (`teamserver/`):
 
-- **gRPC API** (`proto/`): Defines all service contracts
-- **Listeners** (`teamserver/internal/listeners/`): Protocol handlers
-  - HTTPS with malleable profiles
-  - DNS (TXT, AAAA, A record encoding)
-  - SMB named pipes
-  - Raw TCP/TLS
-- **Session Manager** (`teamserver/internal/sessions/`): Implant lifecycle
-- **Task Queue** (`teamserver/internal/tasks/`): Asynchronous task dispatch
-- **Auth/RBAC** (`teamserver/internal/auth/`): mTLS + role-based access
-- **Campaign Tracker** (`teamserver/internal/campaign/`): Operation logging
+- **gRPC API** (`proto/`): Service contracts for operator clients; generated stubs in `proto/jagerpb/`
+- **Listeners** (`internal/listeners/`): HTTPS with malleable profiles, DNS (TXT/AAAA tunneling), SMB named pipes, raw TCP, and external C2; failover orchestration across transports
+- **Session Manager** (`internal/sessions/`): Implant lifecycle and persistence
+- **Task Queue** (`internal/tasks/`): Long-poll task dispatch
+- **Auth/RBAC** (`internal/auth/`, `internal/server/`): API-key and mTLS auth with role-based permissions
+- **Build Engine** (`internal/builds/`): Drives the Python polymorphic builder
+- **Malleable Profiles** (`internal/malleable/`): CS-style profile parsing and transforms
+- **Pivot/Tunnel** (`internal/pivot/`): SOCKS relay, port forwarding, reverse port forwarding, tunnel frames
+- **Redirectors** (`internal/redirectors/`): Generates nginx redirector configurations
+- **Loot Store** (`internal/loot/`): SQLite-backed credentials, targets, findings
+- **Campaign Tracker** (`internal/campaign/`): Operation logging
+- **Scripting** (`internal/scripting/`): Hook engine (Lua-style hooks from `hooks/`)
 
-## Implant (C)
+## Implant - Windows (C)
 
-The implant is written in C for maximum control over evasion:
+`implant/` is the Stage-1 Windows implant:
 
-### Evasion Engine (`implant/src/evasion/`)
-- **Indirect Syscalls** (Hell's Gate / Halo's Gate)
-- **Sleep Encryption** (Ekko/FOLIAGE technique)
-- **ETW/AMSI Bypass**
-- **Process Injection** (module stomp, threadless, early bird, map view)
+### Evasion Engine (`src/evasion/`)
+- Indirect syscalls (Hell's Gate / Halo's Gate)
+- Sleep obfuscation (Ekko / Foliage / Zilean) with heap encryption
+- Patchless AMSI/ETW bypass (hardware breakpoint, page guard, or legacy patch)
+- Process injection: module stomping, threadless injection, early bird, process hollowing
+- NTDLL unhooking, IAT obfuscation, stack spoofing, PPID spoofing
 
-### Post-Exploitation (`implant/src/postex/`)
-- **Credentials**: SAM, Credential Manager, tokens, browser creds
-- **Discovery**: Process list, netstat, AV detection, environment
-- **Lateral Movement**: WMI, SCM, DCOM, schtasks, SMB exec
-- **Persistence**: Registry, services, schtasks, WMI events, COM hijack
-- **Privilege Escalation**: Token abuse, UAC bypass, unquoted paths
-- **BOF Loader**: Execute Cobalt Strike BOFs in-process
+### Post-Exploitation (`src/postex/`)
+- Credentials: SAM, LSASS, Credential Manager, tokens, browser creds, DPAPI
+- Discovery: process list, netstat, AV detection, environment
+- Lateral movement: WMI, SCM, DCOM, schtasks, SMB exec
+- Persistence: registry, services, schtasks, WMI events, COM hijack
+- Privilege escalation: token abuse, UAC bypass, unquoted paths
+- BOF loader: executes Cobalt Strike BOFs in-process
 
-### Pivot (`implant/src/pivot/`)
-- **SOCKS5 Proxy**: Full SOCKS5 with auth
-- **Port Forwarding**: Local and reverse
-- **Named Pipe Relay**: SMB-based pivoting
+### Pivot (`src/pivot/`)
+- SOCKS5 proxy, local/reverse port forwarding, named-pipe relay, TCP pivot
 
-### Platform Support (`implant/src/platform/`)
-- **Windows** (primary): Full feature set
-- **Linux**: ELF with memfd_create, /proc evasion, cron/systemd persistence
-- **macOS** (planned): Mach-O with launchd persistence
+### Transports (`src/core/`)
+- HTTPS (WinHTTP), DNS tunneling, SMB pipes, TCP, transport failover
+
+## Implant - Linux (C)
+
+`implant-linux/` is the Stage-1 Linux ELF implant: libcurl HTTPS beacon with
+malleable profiles, anti-analysis, persistence (cron/systemd), SOCKS proxy,
+tunnel relay, and memfd-based module loading.
 
 ## MCP Server (Python)
 
-The MCP server exposes all C2 functionality as tools for AI agents:
+The MCP server (`mcp/`) exposes the framework as tools for AI agents. Tool
+modules self-register through `tools/registry.py` and are bridged onto FastMCP
+by `registry_bridge.py`. Session, tasking, listener, build, credential, pivot,
+and loot tools talk to the teamserver management API over HTTP.
 
-### Tool Modules (`mcp/tools/`)
-- `sessions.py`: Session management (6 tools)
-- `execution.py`: Command execution (6 tools)
-- `credentials.py`: Credential operations (15 tools)
-- `lateral.py`: Lateral movement (11 tools)
-- `evasion.py`: Defense evasion (10 tools)
-- `pivot.py`: Proxy/tunnel management (9 tools)
-- `builders.py`: Payload generation (9 tools)
-- `campaign.py`: Campaign tracking (9 tools)
-- `ai_native.py`: AI-generated tooling (8 tools)
+Module wiring status is documented in `mcp/tools/UNWIRED_README.md`.
 
-Total: 83+ tools (expanding to 200+)
+## Build Pipeline (Python)
 
-### Registry (`mcp/tools/registry.py`)
-Dynamic tool discovery and dispatch. Modules self-register their tools and handlers.
+`builder/` implements the polymorphic build pipeline:
 
-## Build Engine (Python)
-
-### Polymorphic Engine (`builder/polymorphic.py`)
-- C source AST mutation
-- Variable/function renaming
-- String encryption (XOR rolling, RC4, AES-CTR)
-- Dead code insertion
-- Opaque predicates
-- Junk API calls
-- Build manifest tracking
-
-### Format Generator (`builder/formats.py`)
-Multi-format output:
-- EXE, DLL, Shellcode (sRDI)
-- HTA, VBA Macro, MSI, CPL, XLL
-- PowerShell, C#
-- ISO/IMG containers
-- LNK shortcuts
+- **Profile engine** (`profile_engine.py`): deterministic per-engagement IOC derivation (unwired until `jager_shared` ships - see README Known Limitations)
+- **Polymorphic engine** (`polymorphic.py`): source mutation, identifier renaming, string encryption, dead code, opaque predicates
+- **Format generator** (`formats.py`): EXE, DLL, shellcode, HTA, VBA, MSI, CPL, XLL, ISO/IMG, LNK, PowerShell, C# outputs
+- **Builder CLI** (`build_implant.py`): compile-time config injection via `-D` flags, AES delivery encryption, build manifests
 
 ## Deployment
 
 ### Docker (`deploy/`)
-- `docker-compose.yml`: Full stack (teamserver + MCP + builder + redirector)
-- Isolated internal network for C2 components
-- nginx redirector for domain fronting
+- `docker-compose.yml`: teamserver + MCP server on an isolated bridge network
+- `Dockerfile.teamserver`: multi-stage Go build into a minimal Alpine image
 
 ### Terraform (`deploy/terraform/`)
-- AWS VPC with public/private subnets
-- Teamserver in private subnet
-- Redirectors in public subnet with elastic IPs
-- Security groups restrict operator access
+- AWS VPC with public/private subnets, teamserver in private subnet,
+  redirector instances in public subnets, security groups scoped to operator IPs
 
 ## Security Model
 
-1. **Operator Auth**: mTLS certificates with role-based permissions
-2. **Implant Auth**: Pre-shared keys embedded at build time
-3. **Kill Date**: Implant self-destructs after engagement end date
-4. **Session Journal**: All artifacts tracked for cleanup
-5. **IOC Profile**: Unique per-engagement binary fingerprint
+1. Operator auth: API keys (REST) and mTLS certificates (gRPC) with role-based permissions
+2. Implant auth: per-build crypto material bound at build time
+3. Kill date: implants self-destruct after engagement end
+4. Session crypto: encrypted tasking channel between teamserver and implants
+5. IOC profiles: unique per-engagement wire signature
+6. Audit trail: management actions logged via `/mgmt/audit`

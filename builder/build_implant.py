@@ -885,7 +885,7 @@ class ImplantBuilder:
         system_lib = Path("/usr/lib/x86_64-linux-gnu")
         alt_lib = Path("/usr/lib")
         required = {
-            "libcurl.a": "run jager/scripts/build-static-deps.sh",
+            "libcurl.a": "run scripts/build-static-deps.sh",
             "libssl.a": "apt install libssl-dev",
             "libcrypto.a": "apt install libssl-dev",
             "libz.a": "apt install zlib1g-dev",
@@ -907,7 +907,7 @@ class ImplantBuilder:
         return {"found": found, "missing": missing, "all_present": len(missing) == 0}
 
     def _compile_linux_implant(self, config: BuildConfig) -> dict:
-        """Compile a fully static Linux ELF implant from jager/implant-linux.
+        """Compile a fully static Linux ELF implant from implant-linux.
 
         Uses a minimal custom libcurl (built by scripts/build-static-deps.sh)
         linked with only OpenSSL. No krb5/ldap/ssh2/nghttp/brotli/psl deps.
@@ -924,7 +924,7 @@ class ImplantBuilder:
                 "success": False,
                 "error": (
                     f"Static libraries missing: {static_info['missing']}. "
-                    "Run jager/scripts/build-static-deps.sh to build them."
+                    "Run scripts/build-static-deps.sh to build them."
                 ),
             }
 

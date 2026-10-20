@@ -22,9 +22,8 @@ import threading
 from typing import Optional
 from dataclasses import dataclass
 
-# Add repo root to path for jager.* imports
+# Add repo root to path for builder/mcp imports
 _REPO = os.path.join(os.path.dirname(__file__), '..', '..', '..')
-sys.path.insert(0, _REPO)
 sys.path.insert(0, _REPO)
 
 
@@ -110,7 +109,7 @@ class JagerTestSuite:
 
     def test_polymorphic_build_uniqueness(self):
         """Two builds with different seeds produce different output."""
-        from jager.builder.polymorphic import PolymorphicEngine, PolymorphicConfig
+        from builder.polymorphic import PolymorphicEngine, PolymorphicConfig
 
         source = '''
 static int helper_func(int x) {
@@ -130,7 +129,7 @@ static int helper_func(int x) {
 
     def test_format_generator_exe(self):
         """EXE format generator produces valid C source."""
-        from jager.builder.formats import FormatGenerator, PayloadConfig
+        from builder.formats import FormatGenerator, PayloadConfig
 
         gen = FormatGenerator()
         config = PayloadConfig(shellcode=b'\x90' * 10, format="exe")
@@ -142,7 +141,7 @@ static int helper_func(int x) {
 
     def test_format_generator_dll(self):
         """DLL format generator includes DllMain."""
-        from jager.builder.formats import FormatGenerator, PayloadConfig
+        from builder.formats import FormatGenerator, PayloadConfig
 
         gen = FormatGenerator()
         config = PayloadConfig(shellcode=b'\xcc' * 5, format="dll")
@@ -154,7 +153,7 @@ static int helper_func(int x) {
 
     def test_format_generator_hta(self):
         """HTA format generator produces valid HTML Application."""
-        from jager.builder.formats import FormatGenerator, PayloadConfig
+        from builder.formats import FormatGenerator, PayloadConfig
 
         gen = FormatGenerator()
         config = PayloadConfig(shellcode=b'\x41' * 20, format="hta")
@@ -166,7 +165,7 @@ static int helper_func(int x) {
 
     def test_format_generator_vba(self):
         """VBA format generator produces valid macro code."""
-        from jager.builder.formats import FormatGenerator, PayloadConfig
+        from builder.formats import FormatGenerator, PayloadConfig
 
         gen = FormatGenerator()
         config = PayloadConfig(shellcode=b'\x42' * 10, format="vba")

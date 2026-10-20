@@ -216,7 +216,7 @@ func queueTask(sessionID string, taskType int, data string) error {
 
 func killSession(sessionID string) error {
 	body, err := mgmtPost("/mgmt/session/kill", map[string]interface{}{
-		"session_id": sessionID,
+		"id": sessionID,
 	})
 	if err != nil {
 		return fmt.Errorf("kill session: %w", err)
@@ -261,7 +261,7 @@ func buildImplant(listener, osTarget, arch, format, profile, output string) erro
 	fmt.Printf("    Format:   %s\n", format)
 	fmt.Printf("    Profile:  %s\n", profile)
 
-	body, err := mgmtPost("/mgmt/build", map[string]interface{}{
+	body, err := mgmtPost("/mgmt/build/implant", map[string]interface{}{
 		"listener_id":      listener,
 		"os":               osTarget,
 		"arch":             arch,

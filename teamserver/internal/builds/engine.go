@@ -16,7 +16,7 @@ import (
 
 // EngineConfig points the teamserver at the polymorphic builder (artifact kit).
 type EngineConfig struct {
-	Workspace   string // repo root containing jager/
+	Workspace   string // repo root (contains builder/, profiles/, data/)
 	Python      string // default python3
 	BuilderPath string // path to build_implant.py
 	Timeout     time.Duration
@@ -111,7 +111,7 @@ func NewEngine(cfg EngineConfig, store *Store, logger *zap.Logger) *Engine {
 		cfg.Timeout = 15 * time.Minute
 	}
 	if cfg.BuilderPath == "" && cfg.Workspace != "" {
-		cfg.BuilderPath = filepath.Join(cfg.Workspace, "jager", "builder", "build_implant.py")
+		cfg.BuilderPath = filepath.Join(cfg.Workspace, "builder", "build_implant.py")
 	}
 	return &Engine{cfg: cfg, store: store, logger: logger.Named("engine")}
 }
@@ -339,7 +339,7 @@ func (e *Engine) persistMalleableProfile(buildID, srcPath string) {
 }
 
 func (e *Engine) prepareMalleableProfile(req BuildRequest) (*ProfileOverlay, string, string, error) {
-	enginePath := filepath.Join(e.cfg.Workspace, "jager", "builder", "profile_engine.py")
+	enginePath := filepath.Join(e.cfg.Workspace, "builder", "profile_engine.py")
 	if _, err := os.Stat(enginePath); err != nil {
 		return e.prepareMalleableProfileLegacy()
 	}

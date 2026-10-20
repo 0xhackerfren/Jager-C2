@@ -335,7 +335,7 @@ def generate_profile(
         base = load_yaml(custom_yaml)
     else:
         safe_template = _safe_template_name(template)
-        arsenal_path = workspace / "jager" / "profiles" / "arsenal" / f"{safe_template}.yaml"
+        arsenal_path = workspace / "profiles" / "arsenal" / f"{safe_template}.yaml"
         if not arsenal_path.exists():
             raise FileNotFoundError(f"Arsenal template not found: {arsenal_path}")
         base = load_yaml(arsenal_path)
@@ -364,7 +364,7 @@ def main() -> int:
     args = parser.parse_args()
 
     workspace = Path(args.workspace)
-    arsenal_dir = workspace / "jager" / "profiles" / "arsenal"
+    arsenal_dir = workspace / "profiles" / "arsenal"
 
     if args.list_arsenal:
         print(json.dumps({"arsenal": list_arsenal(arsenal_dir)}, indent=2))

@@ -1,25 +1,29 @@
-# Jager-C2 Tools Registry (UNWIRED)
+# Jager-C2 Tools Registry
 
-These tool modules define MCP tool schemas for future Jager-C2 features.
-They are NOT currently registered in the active `server.py`.
+Tool modules are registered through `mcp/tools/registry.py` and exposed on the
+MCP server by `mcp/registry_bridge.py` at startup.
 
-## Status
+## Module status
 
-- `ai_native.py` - AI-assisted pentesting tools (returns templates, not connected)
-- `campaign.py` - Campaign management (returns placeholder IDs)
-- `builders.py` - Implant builder interface (returns empty lists)
-- Other modules define schemas only
+| Module | Status |
+|--------|--------|
+| `sessions.py` | Wired - session/interact/kill/sleep tools |
+| `execution.py` | Wired - shell/powershell/filesystem/process tools |
+| `credentials.py` | Wired - credential vault operations |
+| `pivot.py` | Wired - SOCKS/port-forward/P2P tools |
+| `evasion.py` | Wired - evasion task wrappers |
+| `lateral.py` | Wired - lateral movement task wrappers |
+| `builders.py` | Partially wired - build tools call the teamserver build API; some schema-only |
+| `campaign.py` | Schema-level - returns placeholder IDs and a local JSONL store |
+| `ai_native.py` | Schema-level - AI-assist scaffolding, not connected to live tasking |
+| `operator.py` | Unwired - depends on the external `jagerexec` package (not in this repo) |
 
-## To Wire
+Modules marked "schema-level" or "unwired" register tools that either return
+placeholder data or require components outside this repository. See README
+"Known Limitations".
 
-To activate these tools, import and register them in `jager/mcp/server.py`:
+## Adding tools
 
-```python
-from jager.mcp.tools import ai_native, campaign, builders
-# Then register each tool with the MCP server
-```
-
-## Decision Log
-
-2026-08-15: Keeping as schema definitions for future expansion.
-grpc_client.py stubs fixed to return explicit errors when teamserver unreachable.
+1. Define a `TOOLS` list (dicts with `name`, `description`, `input_schema`) in the module.
+2. Implement `async def handle(tool_name, args, client)`.
+3. Add the module to `TOOL_MODULES` in `mcp/tools/registry.py` if new.
