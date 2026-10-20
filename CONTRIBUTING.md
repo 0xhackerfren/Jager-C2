@@ -90,7 +90,7 @@ Builds must be reproducible given the same `(engagement_id, template, build_nonc
 
 ## Issue tracking
 
-Work is tracked on the GitHub Projects kanban board linked from the README. Agents and contributors should read `AGENTS.md` for the board workflow (columns, labels, and how to move items).
+Work is tracked on the GitHub Projects kanban board linked from the README ([Jager-C2 Roadmap](https://github.com/users/0xhackerfren/projects/2)). Agents and contributors should read `AGENTS.md` for the board workflow (columns, labels, and how to move items).
 
 ## License
 
