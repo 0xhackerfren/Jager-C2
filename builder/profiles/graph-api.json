@@ -1,0 +1,15 @@
+{
+    "name": "graph-api",
+    "description": "Microsoft Graph API decoy",
+    "http": {
+        "user_agent": "python-requests/2.31.0",
+        "headers": {
+            "Authorization": "Bearer {{RANDOM_B64_48}}",
+            "Content-Type": "application/json",
+            "ConsistencyLevel": "eventual"
+        },
+        "checkin_path": "/v1.0/me/messages",
+        "task_path": "/v1.0/me/drive/root/children",
+        "result_path": "/v1.0/me/events"
+    }
+}

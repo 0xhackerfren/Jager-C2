@@ -1,0 +1,222 @@
+syntax = "proto3";
+
+package jager;
+
+option go_package = "github.com/0xhackerfren/Jager-C2/teamserver/proto/jagerpb";
+
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+import "tasks.proto";
+
+// Credential types stored in loot
+enum CredType {
+  CRED_UNKNOWN = 0;
+  CRED_CLEARTEXT = 1;
+  CRED_NTLM_HASH = 2;
+  CRED_AES256_KEY = 3;
+  CRED_KERBEROS_TICKET = 4;
+  CRED_CERTIFICATE = 5;
+  CRED_SSH_KEY = 6;
+  CRED_DPAPI_MASTERKEY = 7;
+  CRED_NETNTLMV2 = 8;
+}
+
+// A stored credential
+message Credential {
+  string id = 1;
+  string domain = 2;
+  string username = 3;
+  CredType type = 4;
+  string data = 5;              // Hash, cleartext, base64 ticket, etc.
+  string source = 6;            // How obtained: hashdump, kerberoast, dpapi, etc.
+  string source_host = 7;       // Host where captured
+  string session_id = 8;        // Session used to capture
+  google.protobuf.Timestamp captured_at = 9;
+  bool validated = 10;          // Confirmed working
+  string notes = 11;
+}
+
+// A stored file/artifact
+message LootFile {
+  string id = 1;
+  string name = 2;
+  string category = 3;         // screenshot, download, keylog, config
+  bytes data = 4;
+  uint64 size = 5;
+  string sha256 = 6;
+  string source_host = 7;
+  string source_path = 8;
+  string session_id = 9;
+  google.protobuf.Timestamp captured_at = 10;
+}
+
+// Engagement target tracking
+message Target {
+  string id = 1;
+  string hostname = 2;
+  string ip = 3;
+  string domain = 4;
+  OS os = 5;
+  string os_version = 6;
+  repeated string services = 7;
+  string access_level = 8;     // none, user, local_admin, domain_admin
+  bool compromised = 9;
+  repeated string session_ids = 10;
+  google.protobuf.Timestamp first_seen = 11;
+  google.protobuf.Timestamp last_accessed = 12;
+  string notes = 13;
+}
+
+// Finding/vulnerability recorded during engagement
+message Finding {
+  string id = 1;
+  string title = 2;
+  string severity = 3;         // critical, high, medium, low, info
+  string description = 4;
+  string target_id = 5;
+  string technique_id = 6;     // MITRE ATT&CK
+  string evidence = 7;
+  google.protobuf.Timestamp found_at = 8;
+}
+
+// Pivot route between compromised hosts
+message Pivot {
+  string id = 1;
+  string source_session_id = 2;
+  string target_host = 3;
+  Transport transport = 4;
+  string pipe_name = 5;        // For SMB pivots
+  uint32 port = 6;             // For TCP pivots
+  bool active = 7;
+}
+
+// Access log entry
+message AccessLog {
+  string session_id = 1;
+  string target_id = 2;
+  string method = 3;           // What technique was used
+  string status = 4;           // success, failed, detected
+  google.protobuf.Timestamp timestamp = 5;
+}
+
+// MITRE ATT&CK technique usage
+message TechniqueLog {
+  string technique_id = 1;     // T1059.001, etc.
+  string technique_name = 2;
+  string tactic = 3;           // execution, persistence, etc.
+  string session_id = 4;
+  string target_id = 5;
+  string tool_name = 6;        // MCP tool that triggered it
+  bool success = 7;
+  google.protobuf.Timestamp timestamp = 8;
+}
+
+// Requests
+message AddCredentialRequest {
+  Request request = 1;
+  Credential credential = 2;
+}
+
+message ListCredentialsRequest {
+  Request request = 1;
+  string domain_filter = 2;
+  CredType type_filter = 3;
+}
+
+message AddTargetRequest {
+  Request request = 1;
+  Target target = 2;
+}
+
+message ListTargetsRequest {
+  Request request = 1;
+  bool compromised_only = 2;
+}
+
+message AddFindingRequest {
+  Request request = 1;
+  Finding finding = 2;
+}
+
+message ListFindingsRequest {
+  Request request = 1;
+  string severity_filter = 2;
+}
+
+message AddPivotRequest {
+  Request request = 1;
+  Pivot pivot = 2;
+}
+
+message ListPivotsRequest {
+  Request request = 1;
+  bool active_only = 2;
+}
+
+message StoreLootRequest {
+  Request request = 1;
+  LootFile loot = 2;
+}
+
+message ListLootRequest {
+  Request request = 1;
+  string category = 2;
+}
+
+message LogAccessRequest {
+  Request request = 1;
+  AccessLog entry = 2;
+}
+
+message LogTechniqueRequest {
+  Request request = 1;
+  TechniqueLog entry = 2;
+}
+
+// Responses
+message CredentialsResponse {
+  repeated Credential credentials = 1;
+}
+
+message TargetsResponse {
+  repeated Target targets = 1;
+}
+
+message FindingsResponse {
+  repeated Finding findings = 1;
+}
+
+message PivotsResponse {
+  repeated Pivot pivots = 1;
+}
+
+message LootResponse {
+  repeated LootFile items = 1;
+}
+
+message AccessLogsResponse {
+  repeated AccessLog entries = 1;
+}
+
+message TechniqueLogsResponse {
+  repeated TechniqueLog entries = 1;
+}
+
+// Engagement state summary (for MCP resource)
+message EngagementSummary {
+  uint32 total_sessions = 1;
+  uint32 active_sessions = 2;
+  uint32 total_beacons = 3;
+  uint32 active_beacons = 4;
+  uint32 total_targets = 5;
+  uint32 compromised_targets = 6;
+  uint32 total_credentials = 7;
+  uint32 total_findings = 8;
+  uint32 techniques_used = 9;
+  repeated string active_listeners = 10;
+  google.protobuf.Timestamp engagement_start = 11;
+}
+
+message SummaryRequest {
+  Request request = 1;
+}

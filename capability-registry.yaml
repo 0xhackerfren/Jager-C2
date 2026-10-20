@@ -1,0 +1,446 @@
+# Jager-C2 capability registry - single source of truth for task_type mappings.
+# Validated by scripts/validate-c2-capabilities.py
+
+version: "1.0.0"
+
+tasks:
+  - id: TASK_SLEEP
+    type: 1
+    handler: task_sleep
+    mcp_tool: c2_dispatch_task
+    os: [windows, linux, darwin]
+    status: implemented
+
+  - id: TASK_EXIT
+    type: 2
+    handler: task_exit
+    mcp_tool: c2_queue_task
+    os: [windows, linux, darwin]
+    status: implemented
+
+  - id: TASK_SELF_DELETE
+    type: 3
+    handler: task_self_delete
+    mcp_tool: c2_queue_task
+    os: [windows]
+    status: implemented
+
+  - id: TASK_SHELL
+    type: 10
+    handler: task_shell
+    mcp_tool: c2_exec_shell
+    os: [windows, linux, darwin]
+    status: implemented
+
+  - id: TASK_POWERSHELL
+    type: 11
+    handler: task_powershell
+    mcp_tool: c2_exec_powershell
+    os: [windows]
+    status: implemented
+
+  - id: TASK_EXECUTE
+    type: 12
+    handler: task_execute
+    mcp_tool: c2_queue_task
+    os: [windows, linux, darwin]
+    status: implemented
+
+  - id: TASK_EXECUTE_ASSEMBLY
+    type: 13
+    handler: task_execute_assembly
+    mcp_tool: c2_exec_assembly
+    os: [windows]
+    status: partial
+
+  - id: TASK_BOF
+    type: 14
+    handler: task_bof
+    mcp_tool: c2_bof_exec
+    os: [windows]
+    status: partial
+
+  - id: TASK_SHELLCODE
+    type: 15
+    handler: task_shellcode
+    mcp_tool: c2_inject_shellcode
+    os: [windows]
+    status: partial
+
+  - id: TASK_INLINE_EXECUTE
+    type: 16
+    handler: task_inline_execute
+    mcp_tool: c2_queue_task
+    os: [windows]
+    status: stub
+
+  - id: TASK_LS
+    type: 20
+    handler: task_ls
+    mcp_tool: c2_fs_ls
+    os: [windows, linux, darwin]
+    status: implemented
+
+  - id: TASK_CD
+    type: 21
+    handler: task_cd
+    mcp_tool: c2_fs_cd
+    os: [windows, linux, darwin]
+    status: implemented
+
+  - id: TASK_PWD
+    type: 22
+    handler: task_pwd
+    mcp_tool: c2_fs_pwd
+    os: [windows, linux, darwin]
+    status: implemented
+
+  - id: TASK_CAT
+    type: 23
+    handler: task_cat
+    mcp_tool: c2_fs_cat
+    os: [windows, linux, darwin]
+    status: implemented
+
+  - id: TASK_UPLOAD
+    type: 24
+    handler: task_upload
+    mcp_tool: c2_fs_upload
+    os: [windows, linux, darwin]
+    status: implemented
+
+  - id: TASK_DOWNLOAD
+    type: 25
+    handler: task_download
+    mcp_tool: c2_fs_download
+    os: [windows, linux, darwin]
+    status: implemented
+
+  - id: TASK_RM
+    type: 26
+    handler: task_rm
+    mcp_tool: c2_fs_rm
+    os: [windows, linux, darwin]
+    status: implemented
+
+  - id: TASK_MKDIR
+    type: 27
+    handler: task_mkdir_cmd
+    mcp_tool: c2_fs_mkdir
+    os: [windows, linux, darwin]
+    status: implemented
+
+  - id: TASK_CP
+    type: 28
+    handler: task_cp
+    mcp_tool: c2_fs_cp
+    os: [windows, linux, darwin]
+    status: partial
+
+  - id: TASK_MV
+    type: 29
+    handler: task_mv
+    mcp_tool: c2_fs_mv
+    os: [windows, linux, darwin]
+    status: partial
+
+  - id: TASK_TIMESTOMP
+    type: 30
+    handler: task_timestomp
+    mcp_tool: c2_queue_task
+    os: [windows]
+    status: partial
+
+  - id: TASK_PS
+    type: 40
+    handler: task_ps
+    mcp_tool: c2_proc_ps
+    os: [windows, linux, darwin]
+    status: implemented
+
+  - id: TASK_KILL_PROCESS
+    type: 41
+    handler: task_kill_process
+    mcp_tool: c2_proc_kill
+    os: [windows, linux, darwin]
+    status: implemented
+
+  - id: TASK_SPAWN
+    type: 42
+    handler: task_spawn
+    mcp_tool: c2_proc_spawn
+    os: [windows]
+    status: partial
+
+  - id: TASK_INJECT
+    type: 43
+    handler: task_inject
+    mcp_tool: c2_inject
+    os: [windows]
+    status: partial
+
+  - id: TASK_MIGRATE
+    type: 44
+    handler: task_migrate
+    mcp_tool: c2_migrate
+    os: [windows]
+    status: partial
+
+  - id: TASK_IFCONFIG
+    type: 50
+    handler: task_ifconfig
+    mcp_tool: c2_net_ifconfig
+    os: [windows, linux, darwin]
+    status: partial
+
+  - id: TASK_NETSTAT
+    type: 51
+    handler: task_netstat
+    mcp_tool: c2_net_netstat
+    os: [windows, linux, darwin]
+    status: partial
+
+  - id: TASK_PORTSCAN
+    type: 52
+    handler: task_portscan
+    mcp_tool: c2_net_portscan
+    os: [windows, linux, darwin]
+    status: partial
+
+  - id: TASK_SOCKS_START
+    type: 53
+    handler: task_socks_start
+    mcp_tool: c2_pivot_socks_start
+    os: [windows]
+    status: implemented
+
+  - id: TASK_SOCKS_STOP
+    type: 54
+    handler: task_socks_stop
+    mcp_tool: c2_pivot_socks_stop
+    os: [windows]
+    status: implemented
+
+  - id: TASK_PORTFWD_ADD
+    type: 55
+    handler: task_portfwd_add
+    mcp_tool: c2_pivot_portfwd
+    os: [windows]
+    status: implemented
+
+  - id: TASK_PORTFWD_RM
+    type: 56
+    handler: task_portfwd_remove
+    mcp_tool: c2_pivot_portfwd_remove
+    os: [windows]
+    status: implemented
+
+  - id: TASK_TOKEN_STEAL
+    type: 60
+    handler: task_token_steal
+    mcp_tool: c2_token_steal
+    os: [windows]
+    status: partial
+
+  - id: TASK_MAKE_TOKEN
+    type: 61
+    handler: task_make_token
+    mcp_tool: c2_token_make
+    os: [windows]
+    status: partial
+
+  - id: TASK_REVERT_TOKEN
+    type: 62
+    handler: task_revert_token
+    mcp_tool: c2_token_revert
+    os: [windows]
+    status: partial
+
+  - id: TASK_HASHDUMP
+    type: 63
+    handler: task_hashdump
+    mcp_tool: c2_cred_dump
+    os: [windows]
+    status: partial
+
+  - id: TASK_KERBEROS_TICKETS
+    type: 64
+    handler: task_kerberos_tickets
+    mcp_tool: c2_cred_tickets
+    os: [windows]
+    status: partial
+
+  - id: TASK_DPAPI
+    type: 65
+    handler: task_dpapi
+    mcp_tool: c2_cred_dpapi
+    os: [windows]
+    status: partial
+
+  - id: TASK_LOGON_USER
+    type: 66
+    handler: task_logon_user
+    mcp_tool: c2_queue_task
+    os: [windows]
+    status: stub
+
+  - id: TASK_SLEEP_MASK
+    type: 70
+    handler: task_sleep_mask
+    mcp_tool: c2_evasion_sleep_mask
+    os: [windows]
+    status: partial
+
+  - id: TASK_UNHOOK
+    type: 71
+    handler: task_unhook
+    mcp_tool: c2_evasion_unhook
+    os: [windows]
+    status: partial
+
+  - id: TASK_PATCH_ETW
+    type: 72
+    handler: task_patch_etw
+    mcp_tool: c2_evasion_patch_etw
+    os: [windows]
+    status: partial
+
+  - id: TASK_PATCH_AMSI
+    type: 73
+    handler: task_patch_amsi
+    mcp_tool: c2_evasion_patch_amsi
+    os: [windows]
+    status: partial
+
+  - id: TASK_MODULE_STOMP
+    type: 74
+    handler: task_module_stomp
+    mcp_tool: c2_queue_task
+    os: [windows]
+    status: stub
+
+  - id: TASK_LATERAL_PSEXEC
+    type: 80
+    handler: task_lateral_psexec
+    mcp_tool: c2_lateral_psexec
+    os: [windows]
+    status: partial
+
+  - id: TASK_LATERAL_WMI
+    type: 81
+    handler: task_lateral_wmi
+    mcp_tool: c2_lateral_wmi
+    os: [windows]
+    status: partial
+
+  - id: TASK_LATERAL_DCOM
+    type: 82
+    handler: task_lateral_dcom
+    mcp_tool: c2_lateral_dcom
+    os: [windows]
+    status: partial
+
+  - id: TASK_LATERAL_WINRM
+    type: 83
+    handler: task_lateral_winrm
+    mcp_tool: c2_lateral_winrm
+    os: [windows]
+    status: partial
+
+  - id: TASK_LATERAL_SCHTASK
+    type: 84
+    handler: task_lateral_schtask
+    mcp_tool: c2_lateral_schtask
+    os: [windows]
+    status: partial
+
+  - id: TASK_PERSIST_REGISTRY
+    type: 90
+    handler: task_persist_registry
+    mcp_tool: c2_persist_registry
+    os: [windows]
+    status: partial
+
+  - id: TASK_PERSIST_SERVICE
+    type: 91
+    handler: task_persist_service
+    mcp_tool: c2_persist_service
+    os: [windows]
+    status: partial
+
+  - id: TASK_PERSIST_SCHTASK
+    type: 92
+    handler: task_persist_schtask
+    mcp_tool: c2_persist_schtask
+    os: [windows]
+    status: partial
+
+  - id: TASK_PERSIST_COM
+    type: 93
+    handler: task_persist_com
+    mcp_tool: c2_persist_com
+    os: [windows]
+    status: partial
+
+  - id: TASK_PERSIST_DLL_SIDELOAD
+    type: 94
+    handler: task_persist_dll_sideload
+    mcp_tool: c2_persist_dll_sideload
+    os: [windows]
+    status: partial
+
+  - id: TASK_SCREENSHOT
+    type: 100
+    handler: task_screenshot
+    mcp_tool: c2_screenshot
+    os: [windows]
+    status: partial
+
+  - id: TASK_KEYLOG_START
+    type: 101
+    handler: task_keylog_start
+    mcp_tool: c2_keylog_start
+    os: [windows]
+    status: partial
+
+  - id: TASK_KEYLOG_STOP
+    type: 102
+    handler: task_keylog_stop
+    mcp_tool: c2_keylog_stop
+    os: [windows]
+    status: partial
+
+  - id: TASK_CLIPBOARD
+    type: 103
+    handler: task_clipboard
+    mcp_tool: c2_clipboard
+    os: [windows]
+    status: partial
+
+  - id: TASK_BROWSER_CREDS
+    type: 104
+    handler: task_browser_creds
+    mcp_tool: c2_cred_browser
+    os: [windows]
+    status: partial
+
+  - id: TASK_P2P_LISTEN
+    type: 110
+    handler: task_p2p_listen
+    mcp_tool: c2_p2p_listen
+    os: [windows]
+    status: implemented
+
+  - id: TASK_P2P_CONNECT
+    type: 111
+    handler: task_p2p_connect
+    mcp_tool: c2_p2p_connect
+    os: [windows]
+    status: implemented
+
+  - id: TASK_P2P_RELAY
+    type: 112
+    handler: task_p2p_relay
+    mcp_tool: c2_p2p_relay
+    os: [windows]
+    status: implemented

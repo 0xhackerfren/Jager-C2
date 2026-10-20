@@ -1,0 +1,20 @@
+# Jager-C2 MCP Server
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install dependencies
+COPY mcp/requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy MCP server code (as jager_mcp to avoid collision with installed 'mcp' package)
+COPY mcp/ ./jager_mcp/
+COPY builder/ ./builder/
+COPY __init__.py ./
+
+EXPOSE 8080
+
+ENV JAGER_MGMT_URL=http://teamserver:31338
+ENV PYTHONPATH=/app
+
+CMD ["python", "-c", "from jager_mcp.server import main; main()"]

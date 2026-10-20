@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  teamserver:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.teamserver
+    container_name: jager-teamserver
+    restart: unless-stopped
+    ports:
+      - "31337:31337"   # gRPC (operator)
+      - "31338:31338"   # Management REST API
+      - "443:443"       # HTTPS listener
+      - "80:80"         # HTTP listener
+      - "8443:8443"     # Alternate HTTPS
+    volumes:
+      - teamserver-data:/opt/jager/data
+      - teamserver-builds:/opt/jager/builds
+    environment:
+      - JAGER_LOG_LEVEL=debug
+    networks:
+      - c2net
+
+  mcp-server:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.mcp
+    container_name: jager-mcp
+    restart: unless-stopped
+    ports:
+      - "8080:8000"    # MCP SSE (uvicorn default is 8000)
+    environment:
+      - JAGER_MGMT_URL=http://teamserver:31338
+    depends_on:
+      - teamserver
+    networks:
+      - c2net
+
+volumes:
+  teamserver-data:
+  teamserver-builds:
+
+networks:
+  c2net:
+    driver: bridge

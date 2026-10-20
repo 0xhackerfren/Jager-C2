@@ -1,0 +1,18 @@
+[project]
+name = "jager-mcp"
+version = "1.0.0"
+description = "Jager-C2 MCP Server - Agentic C2 Interface"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp[cli]>=1.0.0",
+    "grpcio>=1.60.0",
+    "grpcio-tools>=1.60.0",
+    "protobuf>=4.25.0",
+]
+
+[project.scripts]
+jager-mcp = "server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

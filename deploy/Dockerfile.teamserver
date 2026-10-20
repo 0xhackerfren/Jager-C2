@@ -1,0 +1,34 @@
+# Jager-C2 Teamserver - Multi-stage build
+# Implant/stager builds are C2-owned at runtime (artifact kit mounted via --workspace).
+FROM golang:1.22-alpine AS builder
+
+RUN apk add --no-cache git ca-certificates gcc musl-dev
+
+WORKDIR /build/teamserver
+COPY teamserver/go.mod teamserver/go.sum* ./
+RUN go mod download || true
+
+COPY teamserver/ ./
+
+RUN go mod tidy
+
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build \
+    -ldflags="-s -w" \
+    -o /jager-teamserver ./cmd/jager-server
+
+FROM alpine:3.19
+
+RUN apk add --no-cache ca-certificates tzdata python3
+
+RUN adduser -D -u 1000 jager
+WORKDIR /opt/jager
+
+COPY --from=builder /jager-teamserver .
+
+RUN mkdir -p data certs logs builds && chown -R jager:jager /opt/jager
+USER jager
+
+EXPOSE 31337 31338 443 80 53/udp
+
+ENTRYPOINT ["./jager-teamserver"]
+CMD ["--no-tls", "--db", "data/jager.db", "--grpc", "0.0.0.0:31337", "--mgmt", "0.0.0.0:31338"]

@@ -1,0 +1,123 @@
+# Jager-C2 Malleable Profile Schema (YAML arsenal format)
+# Agents: generate or extend arsenal/*.yaml; run scripts/validate-c2-profiles.py before commit.
+
+schema_version: "1.0"
+
+required_top_level:
+  - name
+  - user_agent
+  - http_get
+  - http_post
+
+fields:
+  name:
+    type: string
+    description: Arsenal template identifier (e.g. default, amazon, microsoft-update)
+  description:
+    type: string
+  sleep_time:
+    type: integer
+    default: 60
+  jitter:
+    type: integer
+    default: 20
+    range: [0, 99]
+  user_agent:
+    type: string
+    description: Primary HTTP User-Agent (mutated per build)
+  http_get:
+    type: block
+    fields:
+      uri: { type: list[string], min_items: 1, note: "index 0 = checkin" }
+      verb: { type: string, default: GET }
+      headers: { type: map[string]string }
+      body:
+        prepend: string
+        append: string
+        parameter: string
+        base64: bool
+        mask: bool
+      server_output:
+        prepend: string
+        append: string
+        base64: bool
+        mask: bool
+        headers: map[string]string
+  http_post:
+    type: block
+    note: "uri[0]=register, uri[1]=result, uri[2]=tunnel"
+    fields:
+      uri: { type: list[string], min_items: 1 }
+      verb: { type: string, default: POST }
+      headers: { type: map[string]string }
+      body: { ref: http_get.body }
+      server_output: { ref: http_get.server_output }
+  http_stager:
+    type: block
+    fields:
+      uri: { type: list[string] }
+      verb: { type: string, default: GET }
+  spawn_to:
+    x86: string
+    x64: string
+  process_inject:
+    alloc_type: string
+    execute_type: string
+    use_syscalls: bool
+  evasion:
+    patch_etw: bool
+    patch_amsi: bool
+    amsi_bypass_method:
+      enum: [hwbp, pageguard, patch]
+      default: hwbp
+      description: >
+        AMSI/ETW bypass technique. hwbp = hardware-breakpoint (patchless, default);
+        pageguard = PAGE_GUARD trigger; patch = in-memory byte patch (legacy).
+    unhook_on_load: bool
+    heap_encrypt: bool
+    syscall_method: { enum: [none, indirect, direct] }
+    sleep_technique:
+      enum: [none, ekko, foliage, zilean]
+      default: foliage
+      description: >
+        Sleep obfuscation. ekko = ROP timer queue; foliage = APC-based stack encrypt;
+        zilean = waitable-timer chain. Alias timer (deprecated) maps to zilean.
+    inject_method:
+      enum: [classic, threadless, hollow, apc]
+      default: threadless
+      description: >
+        Process injection. threadless = module-stomp + CFG-aware trampoline (default);
+        hollow = process hollowing; apc = APC injection; classic = NtMapViewOfSection.
+    anti_analysis: bool
+  cert_pin_hash:
+    type: string
+    description: SHA256 TLS certificate pin passed as -DCERT_PIN_HASH
+  domain_front:
+    type: object
+    fields:
+      cdn: string
+      host: string
+  mutation:
+    uri_suffixes: list[string]
+    path_tokens: list[string]
+    prepend_pool: list[string]
+    append_pool: list[string]
+    chrome_versions: list[string]
+    mask_key_range: [0, 255]
+
+overlay_output:
+  description: JSON written for build_implant.py --profile-json
+  fields:
+    - user_agent
+    - checkin_path
+    - register_path
+    - result_path
+    - stage1_path
+    - tunnel_path
+    - profile_name
+    - profile_fingerprint
+    - engagement_id
+    - build_nonce
+    - malleable_wire
+    - http_headers
+    - evasion

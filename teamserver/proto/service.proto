@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package jager;
+
+option go_package = "github.com/0xhackerfren/Jager-C2/teamserver/proto/jagerpb";
+
+import "common.proto";
+import "sessions.proto";
+import "tasks.proto";
+import "listeners.proto";
+import "builds.proto";
+import "loot.proto";
+
+// Main Jager-C2 teamserver gRPC service
+service Jager-C2 {
+
+  // --- Session Management ---
+  rpc GetSessions(SessionsRequest) returns (SessionsResponse);
+  rpc GetBeacons(BeaconsRequest) returns (BeaconsResponse);
+  rpc InteractSession(InteractRequest) returns (SessionResponse);
+  rpc KillSession(KillRequest) returns (Status);
+  rpc RenameSession(RenameRequest) returns (Status);
+  rpc SetSleep(SleepRequest) returns (Status);
+
+  // --- Task Management ---
+  rpc QueueTask(TaskRequest) returns (TaskResponse);
+  rpc ListTasks(TasksListRequest) returns (TasksListResponse);
+  rpc CancelTask(TaskCancelRequest) returns (Status);
+  rpc WaitForTask(TaskRequest) returns (TaskResponse);  // Long-poll until task completes
+
+  // --- Listener Management ---
+  rpc StartListener(StartListenerRequest) returns (ListenerResponse);
+  rpc StopListener(StopListenerRequest) returns (Status);
+  rpc ListListeners(ListListenersRequest) returns (ListenersResponse);
+  rpc SetMalleableProfile(SetProfileRequest) returns (Status);
+
+  // --- Build / Generate ---
+  rpc GenerateImplant(GenerateImplantRequest) returns (GenerateResponse);
+  rpc GenerateStager(GenerateStagerRequest) returns (GenerateResponse);
+  rpc ListBuilds(ListBuildsRequest) returns (BuildsResponse);
+  rpc DownloadBuild(DownloadBuildRequest) returns (BuildDataResponse);
+
+  // --- Loot / Engagement State ---
+  rpc AddCredential(AddCredentialRequest) returns (Status);
+  rpc ListCredentials(ListCredentialsRequest) returns (CredentialsResponse);
+  rpc AddTarget(AddTargetRequest) returns (Status);
+  rpc ListTargets(ListTargetsRequest) returns (TargetsResponse);
+  rpc AddFinding(AddFindingRequest) returns (Status);
+  rpc ListFindings(ListFindingsRequest) returns (FindingsResponse);
+  rpc AddPivot(AddPivotRequest) returns (Status);
+  rpc ListPivots(ListPivotsRequest) returns (PivotsResponse);
+  rpc StoreLoot(StoreLootRequest) returns (Status);
+  rpc ListLoot(ListLootRequest) returns (LootResponse);
+  rpc LogAccess(LogAccessRequest) returns (Status);
+  rpc LogTechnique(LogTechniqueRequest) returns (Status);
+  rpc GetEngagementSummary(SummaryRequest) returns (EngagementSummary);
+
+  // --- Health / Status ---
+  rpc Ping(Request) returns (Status);
+}

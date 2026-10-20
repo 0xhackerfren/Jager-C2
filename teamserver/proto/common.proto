@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package jager;
+
+option go_package = "github.com/0xhackerfren/Jager-C2/teamserver/proto/jagerpb";
+
+import "google/protobuf/timestamp.proto";
+
+// Operator identity from mTLS certificate
+message Operator {
+  string name = 1;
+  string fingerprint = 2;
+}
+
+// Target operating system
+enum OS {
+  OS_UNKNOWN = 0;
+  OS_WINDOWS = 1;
+  OS_LINUX = 2;
+  OS_MACOS = 3;
+}
+
+// CPU architecture
+enum Arch {
+  ARCH_UNKNOWN = 0;
+  ARCH_X64 = 1;
+  ARCH_X86 = 2;
+  ARCH_ARM64 = 3;
+}
+
+// Output format for generated implants
+enum OutputFormat {
+  OUTPUT_SHELLCODE = 0;
+  OUTPUT_EXE = 1;
+  OUTPUT_DLL = 2;
+  OUTPUT_SERVICE_EXE = 3;
+}
+
+// Transport protocol for C2 communication
+enum Transport {
+  TRANSPORT_HTTPS = 0;
+  TRANSPORT_DNS = 1;
+  TRANSPORT_TCP = 2;
+  TRANSPORT_SMB = 3;
+}
+
+// Generic request envelope with operator context
+message Request {
+  Operator operator = 1;
+  google.protobuf.Timestamp timestamp = 2;
+}
+
+// Generic response status
+message Status {
+  bool success = 1;
+  string error = 2;
+}
+
+// File data for uploads/downloads
+message FileData {
+  string path = 1;
+  bytes data = 2;
+  int64 size = 3;
+  string hash_sha256 = 4;
+}
+
+// Process information
+message ProcessInfo {
+  uint32 pid = 1;
+  uint32 ppid = 2;
+  string name = 3;
+  string owner = 4;
+  string arch = 5;
+  string session_type = 6;
+  uint64 memory_usage = 7;
+}
+
+// Network connection info
+message NetConn {
+  string local_addr = 1;
+  uint32 local_port = 2;
+  string remote_addr = 3;
+  uint32 remote_port = 4;
+  string protocol = 5;
+  string state = 6;
+  uint32 pid = 7;
+}

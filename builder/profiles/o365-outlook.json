@@ -1,0 +1,16 @@
+{
+    "name": "o365-outlook",
+    "description": "Office 365 Outlook Web Access decoy",
+    "http": {
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "headers": {
+            "Accept": "application/json",
+            "X-OWA-CANARY": "{{RANDOM_HEX_32}}",
+            "X-ClientId": "{{UUID}}",
+            "X-OWA-ClientId": "{{UUID}}"
+        },
+        "checkin_path": "/owa/service.svc?action=GetConversationItems",
+        "task_path": "/owa/service.svc?action=SyncFolderItems",
+        "result_path": "/owa/service.svc?action=UpdateItem"
+    }
+}

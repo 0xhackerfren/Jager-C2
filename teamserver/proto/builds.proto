@@ -1,0 +1,143 @@
+syntax = "proto3";
+
+package jager;
+
+option go_package = "github.com/0xhackerfren/Jager-C2/teamserver/proto/jagerpb";
+
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+
+// Implant build configuration
+message ImplantConfig {
+  // Target platform
+  OS target_os = 1;
+  Arch target_arch = 2;
+  OutputFormat output_format = 3;
+
+  // C2 configuration
+  repeated C2Endpoint c2_endpoints = 4;
+  uint32 sleep_seconds = 5;
+  uint32 jitter_percent = 6;
+
+  // Evasion options
+  EvasionConfig evasion = 7;
+
+  // Build options
+  bool debug = 8;
+  bool strip_symbols = 9;
+  string build_name = 10;
+
+  // Kill date (implant refuses execution after this)
+  google.protobuf.Timestamp kill_date = 11;
+
+  // IOC profile seed (for polymorphic generation)
+  string ioc_seed = 12;
+}
+
+message C2Endpoint {
+  Transport transport = 1;
+  string url = 2;           // Full URL for HTTPS, domain for DNS, host:port for TCP
+  uint32 priority = 3;      // Fallback order (0 = primary)
+}
+
+message EvasionConfig {
+  // Syscall method
+  string syscall_method = 1;         // direct, indirect, hells_gate, halos_gate
+  bool stack_spoof = 2;
+
+  // Sleep
+  string sleep_technique = 3;       // ekko, foliage, zilean, basic
+  bool heap_encrypt = 4;
+
+  // Injection
+  string default_injection = 5;     // earlybird, apc, threadpool, module_stomp
+
+  // Patches
+  bool patch_etw = 6;
+  bool patch_amsi = 7;
+  bool unhook_on_load = 8;
+
+  // Process
+  bool ppid_spoof = 9;
+  uint32 ppid_target = 10;          // 0 = auto-select
+  bool block_dlls = 11;
+
+  // Anti-analysis
+  bool sandbox_checks = 12;
+  uint32 sandbox_sleep_ms = 13;     // Initial sleep to evade sandboxes
+}
+
+// Stager build configuration
+message StagerConfig {
+  OS target_os = 1;
+  Arch target_arch = 2;
+  OutputFormat output_format = 3;
+  string staging_url = 4;           // Where to fetch Stage-1
+  bytes encryption_key = 5;         // AES-256 key for Stage-1 decryption
+  EvasionConfig evasion = 6;
+  string ioc_seed = 7;
+  google.protobuf.Timestamp kill_date = 8;
+}
+
+// A completed build record
+message ImplantBuild {
+  string id = 1;
+  string name = 2;
+  ImplantConfig config = 3;
+  google.protobuf.Timestamp built_at = 4;
+  string sha256 = 5;
+  uint64 file_size = 6;
+  Operator built_by = 7;
+  string ioc_profile_id = 8;
+}
+
+message StagerBuild {
+  string id = 1;
+  string name = 2;
+  StagerConfig config = 3;
+  google.protobuf.Timestamp built_at = 4;
+  string sha256 = 5;
+  uint64 file_size = 6;
+  Operator built_by = 7;
+}
+
+// Requests
+message GenerateImplantRequest {
+  Request request = 1;
+  ImplantConfig config = 2;
+  string save_path = 3;
+}
+
+message GenerateStagerRequest {
+  Request request = 1;
+  StagerConfig config = 2;
+  string save_path = 3;
+}
+
+message ListBuildsRequest {
+  Request request = 1;
+}
+
+message DownloadBuildRequest {
+  Request request = 1;
+  string build_id = 2;
+}
+
+// Responses
+message GenerateResponse {
+  string build_id = 1;
+  string save_path = 2;
+  string sha256 = 3;
+  uint64 file_size = 4;
+  Status status = 5;
+}
+
+message BuildsResponse {
+  repeated ImplantBuild implant_builds = 1;
+  repeated StagerBuild stager_builds = 2;
+}
+
+message BuildDataResponse {
+  bytes data = 1;
+  Status status = 2;
+}

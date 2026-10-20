@@ -1,0 +1,27 @@
+# Simulated ProLabs target for testing
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl wget net-tools iputils-ping iproute2 procps \
+    openssh-server sudo cron \
+    python3 python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create some test users to discover
+RUN useradd -m -s /bin/bash webadmin && echo "webadmin:Passw0rd123!" | chpasswd && \
+    useradd -m -s /bin/bash dbbackup && echo "dbbackup:Summer2026!" | chpasswd && \
+    useradd -m -s /bin/bash svc_monitoring && echo "svc_monitoring:M0n!tor" | chpasswd
+
+# Drop some "interesting" files
+RUN mkdir -p /opt/backup /var/www/html /tmp/.hidden && \
+    echo "DB_HOST=10.10.10.50\nDB_USER=sa\nDB_PASS=Pr0dP@ss!" > /opt/backup/db-config.bak && \
+    echo "admin:admin123\nroot:toor\nbackup:B@ckup2025" > /tmp/.hidden/.credentials && \
+    echo "<html><title>Internal Portal</title></html>" > /var/www/html/index.html
+
+WORKDIR /opt
+
+COPY implant-go/implant-linux-test /opt/implant
+RUN chmod +x /opt/implant
+
+# Run the implant
+CMD ["/opt/implant"]

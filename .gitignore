@@ -1,0 +1,53 @@
+# Build artifacts
+builds/*.exe
+builds/*.enc
+builds/*.json
+builds/implant-*
+
+# Compiled binaries
+bin/
+implant/bin/
+implant-linux/bin/
+implant-go/implant-*
+implant-go/implant-test.exe
+
+# Secrets (generated locally, never commit)
+data/*.log
+data/build-secret.txt
+data/api-key.txt
+data/api_key.txt
+data/operator-keys.json
+data/build_secret.key
+teamserver/**/data/api-key.txt
+teamserver/**/data/build-secret.txt
+teamserver/internal/builds/data/
+builder/builds/*.exe
+builder/builds/*.enc
+builder/builds/*.json
+builder/builds/profile.json
+
+# Database files
+data/*.db
+data/builds/
+*.db
+*.db-shm
+*.db-wal
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.venv/
+
+# OS / IDE artifacts
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Temporary build outputs
+/tmp/jager-*

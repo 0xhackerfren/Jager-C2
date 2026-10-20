@@ -1,0 +1,16 @@
+{
+    "name": "teams-api",
+    "description": "Microsoft Teams API decoy",
+    "http": {
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "headers": {
+            "Accept": "application/json",
+            "Authorization": "Bearer {{RANDOM_B64_48}}",
+            "x-ms-client-request-id": "{{UUID}}",
+            "x-ms-correlation-id": "{{UUID}}"
+        },
+        "checkin_path": "/api/csa/api/v1/teams/users/me/conversations",
+        "task_path": "/api/csa/api/v1/teams/users/me/messages",
+        "result_path": "/api/csa/api/v1/teams/users/me/activities"
+    }
+}

@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package jager;
+
+option go_package = "github.com/0xhackerfren/Jager-C2/teamserver/proto/jagerpb";
+
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+
+// Registration message sent by implant on first callback
+message ImplantRegistration {
+  string implant_id = 1;
+  string hostname = 2;
+  string username = 3;
+  string domain = 4;
+  OS os = 5;
+  Arch arch = 6;
+  uint32 pid = 7;
+  string process_name = 8;
+  bool elevated = 9;
+  string internal_ip = 10;
+  repeated string interfaces = 11;
+  string os_version = 12;
+  string build_id = 13;
+  Transport transport = 14;
+  google.protobuf.Timestamp registered_at = 15;
+}
+
+// Interactive session (persistent connection)
+message Session {
+  string id = 1;
+  ImplantRegistration registration = 2;
+  google.protobuf.Timestamp last_checkin = 3;
+  bool alive = 4;
+  Transport active_transport = 5;
+  string remote_addr = 6;
+  string note = 7;
+}
+
+// Async beacon (periodic check-in)
+message Beacon {
+  string id = 1;
+  ImplantRegistration registration = 2;
+  google.protobuf.Timestamp last_checkin = 3;
+  google.protobuf.Timestamp next_checkin = 4;
+  uint32 interval_seconds = 5;
+  uint32 jitter_percent = 6;
+  bool alive = 7;
+  Transport active_transport = 8;
+  string remote_addr = 9;
+  string note = 10;
+}
+
+// Requests
+message SessionsRequest {
+  Request request = 1;
+  bool alive_only = 2;
+}
+
+message BeaconsRequest {
+  Request request = 1;
+  bool alive_only = 2;
+}
+
+message InteractRequest {
+  Request request = 1;
+  string session_id = 2;
+}
+
+message KillRequest {
+  Request request = 1;
+  string id = 2;
+  bool force = 3;
+}
+
+message RenameRequest {
+  Request request = 1;
+  string id = 2;
+  string new_name = 3;
+}
+
+message SleepRequest {
+  Request request = 1;
+  string id = 2;
+  uint32 interval_seconds = 3;
+  uint32 jitter_percent = 4;
+}
+
+// Responses
+message SessionsResponse {
+  repeated Session sessions = 1;
+}
+
+message BeaconsResponse {
+  repeated Beacon beacons = 1;
+}
+
+message SessionResponse {
+  Session session = 1;
+  Status status = 2;
+}
+
+message BeaconResponse {
+  Beacon beacon = 1;
+  Status status = 2;
+}
