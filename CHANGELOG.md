@@ -3,6 +3,16 @@
 All notable changes to Jager-C2 are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- Docs-first development gates, test strategy, release readiness audit, local lab guide and ADR.
+- Issue/PR templates requiring docs → tests → code evidence.
+
+### Changed
+- Public docs identify preview status, known CI failures and CLI placeholders.
+- Local startup instructions use the actual server flags and repository-root paths.
+
 ## [1.0.1] - 2026-10-20
 
 ### Fixed

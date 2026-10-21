@@ -10,7 +10,8 @@ Full rules: [AGENTS.md](../../AGENTS.md) section "Kanban board workflow".
 
 ## Board
 
-GitHub Projects board "Jager-C2 Roadmap" linked in README. Columns:
+Accessible issue dashboard: #12; status labels and workflow are specified in
+`docs/DEVELOPMENT.md`. The existing Projects board is not yet verified. Columns:
 Backlog -> Ready -> In Progress (max 1 per agent) -> In Review -> Done.
 
 ## Labels
