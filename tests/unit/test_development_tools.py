@@ -92,6 +92,15 @@ class BoardTests(unittest.TestCase):
     def test_empty_board(self):
         self.assertIn('No work items', self.render([]))
 
+    def test_snapshot_larger_than_one_api_page(self):
+        result = self.render([issue(n) for n in range(1, 207)])
+        self.assertIn('[#206 ', result)
+        self.assertEqual(result.count('](https://github.com/0xhackerfren/Jager-C2/issues/'), 205)
+
+    def test_non_list_input_rejected(self):
+        with self.assertRaises(ValueError):
+            self.render({'number': 1})
+
 
 class DocumentationTests(unittest.TestCase):
     def test_existing_relative_link(self):

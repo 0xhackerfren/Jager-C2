@@ -8,6 +8,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versio
 ### Added
 - Docs-first development gates, test strategy, release readiness audit, local lab guide and ADR.
 - Issue/PR templates requiring docs → tests → code evidence.
+- Issue-backed Kanban dashboard renderer, automated refresh workflow, regression tests and local documentation-link checks.
 
 ### Changed
 - Public docs identify preview status, known CI failures and CLI placeholders.

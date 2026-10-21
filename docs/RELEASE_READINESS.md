@@ -12,12 +12,12 @@ Evidence: [CI run 39434214859](https://github.com/0xhackerfren/Jager-C2/actions/
 
 | Work | Observed gap | Release acceptance |
 | --- | --- | --- |
-| Teamserver authentication | Five auth tests fail; nil pointer panic in permission test | Isolated auth fixtures; missing/invalid keys denied, correct role permissions; full Go suite passes |
-| Build reproducibility | Windows result-structure compile errors; Linux curl header not found | Clean documented builds pass on supported platforms; dependency provenance recorded |
+| Teamserver authentication (#13) | Five auth tests fail; nil pointer panic in permission test | Isolated auth fixtures; missing/invalid keys denied, correct role permissions; full Go suite passes |
+| Build reproducibility (#14) | Windows result-structure compile errors; Linux curl header not found | Clean documented builds pass on supported platforms; dependency provenance recorded |
 | Integration harness (#10) | No persisted server binary, uncollected custom suite, unmanaged listener and missing Python import | Required tests collected, isolated authenticated lifecycle, failures block CI |
 | CLI truth (#3) | List commands print empty tables; task shell/upload/download only print messages | Stubs explicitly excluded from support; every promoted command has a behavioral test |
 | Dependency/tool truth (#1, #2, #4) | Missing shared libraries and placeholder tools | Supported surface explicitly enumerated; no placeholder advertised as complete |
-| Deployment | Default Docker guide implies ready deployment; MCP API key not wired in Compose | Clean install, auth, TLS, persistence, backup/restore and teardown demonstrated |
+| Deployment (#15) | Default Docker guide implies ready deployment; MCP API key not wired in Compose | Clean install, auth, TLS, persistence, backup/restore and teardown demonstrated |
 | Evidence guide (#9) | Retrieval and retention not fully documented | Storage, access, export and cleanup verified and documented |
 | Board/process (#11) | Existing Projects access unverified | Accessible issue dashboard, issue ownership and docs/tests/code review evidence |
 

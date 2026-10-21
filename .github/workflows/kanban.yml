@@ -1,0 +1,56 @@
+name: Refresh development Kanban
+on:
+  issues:
+    types: [opened, labeled, unlabeled, closed, reopened]
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: development-kanban
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      # Only trusted default-branch code runs; issue content is data, never code.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Fetch complete issue snapshot and bootstrap board labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const repo = context.repo;
+            const labels = ['status/backlog', 'status/ready', 'status/in-progress', 'status/in-review', 'blocked'];
+            for (const name of labels) {
+              try {
+                await github.rest.issues.getLabel({...repo, name});
+              } catch (error) {
+                if (error.status !== 404) throw error;
+                await github.rest.issues.createLabel({...repo, name, color: name === 'blocked' ? 'b60205' : '1d76db'});
+              }
+            }
+            const issues = await github.paginate(github.rest.issues.listForRepo, {...repo, state: 'all', per_page: 100});
+            fs.writeFileSync('kanban-input.json', JSON.stringify(issues));
+      - name: Render dashboard
+        env:
+          BOARD_REPOSITORY: ${{ github.repository }}
+        run: python scripts/render-kanban.py --input kanban-input.json --output kanban-output.md --repository "$BOARD_REPOSITORY" --dashboard 12
+      - name: Update the dashboard if changed
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const params = {...context.repo, issue_number: 12};
+            const {data: issue} = await github.rest.issues.get(params);
+            if (!issue.body?.includes('<!-- jager-kanban-dashboard -->')) {
+              throw new Error('Dashboard marker absent; refusing to overwrite issue');
+            }
+            const body = fs.readFileSync('kanban-output.md', 'utf8');
+            if (body !== issue.body) await github.rest.issues.update({...params, body});
