@@ -123,6 +123,10 @@ transforms, pipes, and mutexes. Never reuse builds across engagements.
 5. **API keys** - rotate after operator turnover; never commit them
 6. **Redirectors** - never expose the teamserver directly; use the generated nginx redirector configs
 
+## Management authentication
+
+Management authentication fails closed when its key store or RBAC manager is missing; protected routes require a valid key and permission checks require an authenticated operator. See [management authentication](management-authentication.md).
+
 ## Troubleshooting
 
 - **Implant not calling back?** Verify the C2 URL matches a running listener; check `docker logs jager-teamserver`

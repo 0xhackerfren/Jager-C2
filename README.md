@@ -118,6 +118,8 @@ Add the MCP server to your agent harness:
 
 ## Security Notes
 
+Management authentication fails closed when its key store or RBAC manager is missing; protected routes require a valid key and permission checks require an authenticated operator. See [management authentication](docs/management-authentication.md).
+
 - Never commit API keys or build secrets; generated material lives under `data/` and is gitignored
 - Run the teamserver with TLS in production (`--mgmt-tls --cert <cert> --key <key>` for management TLS; configure `--ca` for gRPC mTLS)
 - All `/mgmt/*` routes except `/mgmt/ping` require the `X-Jager-C2-Api-Key` or `Authorization: Bearer` header

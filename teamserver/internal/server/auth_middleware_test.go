@@ -5,12 +5,29 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/0xhackerfren/Jager-C2/teamserver/internal/auth"
 	"go.uber.org/zap"
 )
+
+// newAuthTestServer checks initialization and isolates all persistent state.
+func newAuthTestServer(t *testing.T, store *APIKeyStore) *Server {
+	t.Helper()
+	workspace := t.TempDir()
+	srv, err := New(&Config{
+		DBPath:    filepath.Join(workspace, "jager.db"),
+		Workspace: workspace,
+		BuildDir:  filepath.Join(workspace, "builds"),
+	}, zap.NewNop(), store)
+	if err != nil {
+		t.Fatalf("initialize authentication test server: %v", err)
+	}
+	t.Cleanup(srv.Shutdown)
+	return srv
+}
 
 func testKeyStore(t *testing.T, key string) *APIKeyStore {
 	t.Helper()
@@ -43,7 +60,7 @@ func TestAuthMiddlewareFailsClosedWhenKeyNotConfigured(t *testing.T) {
 
 func TestAuthMiddlewareRejectsMissingKey(t *testing.T) {
 	store := testKeyStore(t, "test-secret-key")
-	srv, _ := New(&Config{}, zap.NewNop(), store)
+	srv := newAuthTestServer(t, store)
 
 	called := false
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +81,7 @@ func TestAuthMiddlewareRejectsMissingKey(t *testing.T) {
 
 func TestAuthMiddlewareAllowsValidKey(t *testing.T) {
 	store := testKeyStore(t, "test-secret-key")
-	srv, _ := New(&Config{}, zap.NewNop(), store)
+	srv := newAuthTestServer(t, store)
 
 	called := false
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +103,7 @@ func TestAuthMiddlewareAllowsValidKey(t *testing.T) {
 
 func TestAuthMiddlewareDerivesOperatorFromKey(t *testing.T) {
 	store := testKeyStore(t, "test-secret-key")
-	srv, _ := New(&Config{}, zap.NewNop(), store)
+	srv := newAuthTestServer(t, store)
 
 	var gotName string
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -108,7 +125,7 @@ func TestAuthMiddlewareDerivesOperatorFromKey(t *testing.T) {
 func TestAuthMiddlewareIgnoresOperatorHeader(t *testing.T) {
 	store := NewAPIKeyStore(zap.NewNop())
 	store.Add(OperatorKey{Operator: "real-op", Key: "test-secret-key", Role: "admin"})
-	srv, _ := New(&Config{}, zap.NewNop(), store)
+	srv := newAuthTestServer(t, store)
 
 	var gotName string
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -130,7 +147,7 @@ func TestAuthMiddlewareIgnoresOperatorHeader(t *testing.T) {
 
 func TestAuthMiddlewarePingOpen(t *testing.T) {
 	store := testKeyStore(t, "test-secret-key")
-	srv, _ := New(&Config{}, zap.NewNop(), store)
+	srv := newAuthTestServer(t, store)
 
 	called := false
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -148,7 +165,7 @@ func TestAuthMiddlewarePingOpen(t *testing.T) {
 
 func TestRequirePermUsesAuthenticatedOperator(t *testing.T) {
 	store := testKeyStore(t, "test-secret-key")
-	srv, _ := New(&Config{}, zap.NewNop(), store)
+	srv := newAuthTestServer(t, store)
 	mgmt := &ManagementAPI{srv: srv}
 
 	op := srv.auth.RegisterOperatorByName("default", auth.RoleAdmin)
@@ -164,7 +181,7 @@ func TestRequirePermUsesAuthenticatedOperator(t *testing.T) {
 func TestEnsureMgmtAPIKeyPersists(t *testing.T) {
 	dir := t.TempDir()
 	dbPath := dir + "/jager.db"
-	os.Unsetenv("JAGER_MGMT_API_KEY")
+	t.Setenv("JAGER_MGMT_API_KEY", "")
 
 	key1 := EnsureMgmtAPIKey(dir, dbPath, zap.NewNop())
 	if key1 == "" {
@@ -177,7 +194,7 @@ func TestEnsureMgmtAPIKeyPersists(t *testing.T) {
 	os.Unsetenv("JAGER_MGMT_API_KEY")
 	key2 := EnsureMgmtAPIKey(dir, dbPath, zap.NewNop())
 	if key1 != key2 {
-		t.Fatalf("expected persisted key, got %q vs %q", key1, key2)
+		t.Fatal("expected the same persisted key")
 	}
 }
 

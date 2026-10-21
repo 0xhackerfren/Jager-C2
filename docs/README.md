@@ -8,6 +8,7 @@ changelog are history, not evidence of release qualification.
 | [Architecture](ARCHITECTURE.md) | Component boundaries and source locations |
 | [Operator guide](OPERATOR_GUIDE.md) | Existing interfaces; consult limitations before use |
 | [Development process](DEVELOPMENT.md) | Docs → tests → code; issue and review gates |
+| [Management authentication](management-authentication.md) | Required authentication and fixture behavior |
 | [Testing](TESTING.md) | Test commands, coverage gaps, evidence requirements |
 | [Release readiness](RELEASE_READINESS.md) | Launch blockers and release checklist |
 | [Local lab](LOCAL_LAB.md) | Loopback-only management startup and health check |
