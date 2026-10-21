@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/0xhackerfren/Jager-C2/teamserver/internal/auth"
 	"go.uber.org/zap"
@@ -187,5 +188,97 @@ func TestAPIKeyStoreConstantTimeValidate(t *testing.T) {
 	}
 	if _, ok := store.Validate("correct-key"); !ok {
 		t.Fatal("correct key should validate")
+	}
+}
+
+func TestAuthMiddlewareRejectsInvalidAndExpiredKeys(t *testing.T) {
+	for _, tc := range []struct {
+		name, key string
+		expires   time.Time
+	}{
+		{name: "invalid", key: "wrong-key"},
+		{name: "expired", key: "test-key", expires: time.Now().Add(-time.Hour)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			store := NewAPIKeyStore(zap.NewNop())
+			store.Add(OperatorKey{Operator: "viewer", Key: "test-key", Role: "viewer", Expires: tc.expires})
+			srv := &Server{keyStore: store, auth: auth.NewAuthManager(zap.NewNop())}
+			called := false
+			next := http.HandlerFunc(func(http.ResponseWriter, *http.Request) { called = true })
+			req := httptest.NewRequest(http.MethodGet, "/mgmt/sessions", nil)
+			req.Header.Set("X-Jager-C2-Api-Key", tc.key)
+			rec := httptest.NewRecorder()
+			authMiddleware(srv, next).ServeHTTP(rec, req)
+			if rec.Code != http.StatusUnauthorized || called {
+				t.Fatalf("expected denied access without dispatch, status=%d called=%v", rec.Code, called)
+			}
+		})
+	}
+}
+
+func TestAuthMiddlewareBearerIdentityAndViewerPermissions(t *testing.T) {
+	store := NewAPIKeyStore(zap.NewNop())
+	store.Add(OperatorKey{Operator: "viewer", Key: "test-key", Role: "viewer"})
+	srv := &Server{keyStore: store, auth: auth.NewAuthManager(zap.NewNop())}
+	mgmt := &ManagementAPI{srv: srv}
+	for _, tc := range []struct {
+		name   string
+		perm   auth.Permission
+		status int
+	}{
+		{"list", auth.PermSessionList, http.StatusOK},
+		{"admin", auth.PermAdminUsers, http.StatusForbidden},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			reached := false
+			next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				op := operatorFromContext(r.Context())
+				if op == nil || op.Name != "viewer" || op.Role != auth.RoleViewer {
+					t.Fatal("identity and role must come from API key")
+				}
+				if mgmt.requirePerm(w, r, tc.perm) {
+					reached = true
+				}
+			})
+			req := httptest.NewRequest(http.MethodGet, "/mgmt/sessions", nil)
+			req.Header.Set("Authorization", "Bearer test-key")
+			req.Header.Set("X-Jager-C2-Operator", "admin")
+			rec := httptest.NewRecorder()
+			authMiddleware(srv, next).ServeHTTP(rec, req)
+			if rec.Code != tc.status || reached != (tc.status == http.StatusOK) {
+				t.Fatalf("unexpected authorization: status=%d reached=%v", rec.Code, reached)
+			}
+		})
+	}
+}
+
+func TestAuthMiddlewareFailsClosedWithoutRBAC(t *testing.T) {
+	srv := &Server{keyStore: testKeyStore(t, "test-key")}
+	reached := false
+	next := http.HandlerFunc(func(http.ResponseWriter, *http.Request) { reached = true })
+	req := httptest.NewRequest(http.MethodGet, "/mgmt/sessions", nil)
+	req.Header.Set("X-Jager-C2-Api-Key", "test-key")
+	rec := httptest.NewRecorder()
+	authMiddleware(srv, next).ServeHTTP(rec, req)
+	if rec.Code != http.StatusForbidden || reached {
+		t.Fatalf("missing RBAC must fail closed: status=%d reached=%v", rec.Code, reached)
+	}
+}
+
+func TestRequirePermFailsClosedWithoutRBAC(t *testing.T) {
+	mgmt := &ManagementAPI{srv: &Server{}}
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/mgmt/sessions", nil)
+	if mgmt.requirePerm(rec, req, auth.PermSessionList) || rec.Code != http.StatusForbidden {
+		t.Fatal("missing RBAC manager must not authorize requests")
+	}
+}
+
+func TestRequirePermRejectsMissingOperator(t *testing.T) {
+	mgmt := &ManagementAPI{srv: &Server{auth: auth.NewAuthManager(zap.NewNop())}}
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/mgmt/sessions", nil)
+	if mgmt.requirePerm(rec, req, auth.PermSessionList) || rec.Code != http.StatusForbidden {
+		t.Fatal("missing authenticated identity must not authorize requests")
 	}
 }
