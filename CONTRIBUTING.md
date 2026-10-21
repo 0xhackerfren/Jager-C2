@@ -80,6 +80,14 @@ Never commit: API keys, build secrets, AES keys/IVs, compiled implant binaries, 
 
 Builds must be reproducible given the same `(engagement_id, template, build_nonce)`. Avoid adding time, randomness, or network lookups to profile derivation paths. Tests must not depend on execution order.
 
+## Docs → tests → code
+
+Follow [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md): commit the specification,
+then failing regression tests with evidence, then implementation. The issue
+[Kanban dashboard](https://github.com/0xhackerfren/Jager-C2/issues/12) uses
+exclusive status labels. Review [docs/TESTING.md](docs/TESTING.md) for known
+CI failures; do not infer release readiness from a partial check.
+
 ## Pull requests
 
 1. Fork or branch from `main` (`feat/...`, `fix/...`, `docs/...`).

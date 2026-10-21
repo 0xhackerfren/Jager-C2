@@ -1,5 +1,8 @@
 # Jager-C2 Architecture
 
+> This is a source map, not a validated support matrix. See
+> [release readiness](RELEASE_READINESS.md) for current failures and limitations.
+
 ## Overview
 
 Jager-C2 is an agentic-first command-and-control framework for authorized red team operations. It pairs a Go gRPC teamserver with hardened C implants, a polymorphic Python build pipeline, and an MCP server that exposes the framework to AI agents.

@@ -2,33 +2,18 @@
 
 ## Quick Start
 
-### 1. Deploy the teamserver
+### 1. Start a local management lab
 
-```bash
-# Docker (local/lab)
-cd deploy/
-docker-compose up -d
-
-# Or build manually
-cd teamserver && go build -o ../bin/jager-server ./cmd/jager-server
-./bin/jager-server --no-tls --db data/jager.db \
-  --grpc 0.0.0.0:31337 --mgmt 0.0.0.0:31338
-
-# Cloud (AWS)
-cd deploy/terraform/
-terraform init
-terraform apply -var="engagement_id=ENG-001" -var="operator_ips=[\"1.2.3.4\"]" -var="domain=c2.example.com"
-```
-
-The teamserver auto-generates a management API key at `data/api-key.txt` on
-first start. All `/mgmt/*` endpoints (except `/mgmt/ping`) require it via the
-`X-Jager-C2-Api-Key` header.
+Use [LOCAL_LAB.md](LOCAL_LAB.md) from the repository root. The deployment is a
+development preview; [release blockers](RELEASE_READINESS.md) must be resolved
+before operational use. Docker and cloud configurations are not yet qualified.
 
 ### 2. Build the operator CLI
 
 ```bash
-cd client/cli && go mod tidy && go build -o jager
-export JAGER_MGMT_URL=http://127.0.0.1:31338
+(cd client/cli && go mod tidy && go build -o ../../bin/jager)
+export PATH="$PWD/bin:$PATH"
+# CLI defaults to loopback; use --server to override.
 export JAGER_MGMT_API_KEY=$(cat data/api-key.txt)
 ```
 
@@ -74,20 +59,20 @@ as a shell command.
 | `jager sessions list` | List active sessions |
 | `jager sessions interact <id>` | Interactive session REPL |
 | `jager sessions kill <id>` | Terminate a session |
-| `jager listeners list` | List active listeners |
+| `jager listeners list` | Placeholder: prints an empty table |
 | `jager listeners create` | Start a listener (`--transport https/dns/smb/tcp --host --port`) |
 | `jager build implant` | Generate an implant (`--os --arch --format --profile --output`) |
-| `jager build list` | List previous builds |
-| `jager task shell <id> <cmd>` | Task a shell command |
-| `jager task upload <id> <l> <r>` | Upload a file |
-| `jager task download <id> <r>` | Download a file |
-| `jager campaign list` | List campaigns |
-| `jager creds list` | List stored credentials |
+| `jager build list` | Placeholder: prints an empty table |
+| `jager task shell <id> <cmd>` | Placeholder: prints a message only |
+| `jager task upload <id> <l> <r>` | Placeholder: prints a message only |
+| `jager task download <id> <r>` | Placeholder: prints a message only |
+| `jager campaign list` | Placeholder: prints an empty table |
+| `jager creds list` | Placeholder: prints an empty table |
 
 Command sets that are still CLI stubs (empty output) are marked on the project
-kanban board. Full capabilities for those domains are available today through
+kanban board. Related wrappers for those domains exist through
 the MCP tools (`cred_*`, `lateral_*`, `evasion_*`, `pivot_*`), which call the
-same management API.
+same management API. Wrapper presence does not establish validated end-to-end support.
 
 ## Task types
 

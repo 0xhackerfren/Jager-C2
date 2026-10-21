@@ -59,9 +59,20 @@ python scripts/validate-c2-capabilities.py
 
 Task names may contain digits (`TASK_P2P_LISTEN`); regexes over these files must use `TASK_[A-Z0-9_]+`.
 
+## Docs → tests → code
+
+Read docs/DEVELOPMENT.md and docs/TESTING.md. Specify acceptance and docs
+first, commit failing regression tests second, implement third. Record exact
+red/green evidence in the PR; explain docs-only/refactor exceptions. Do not
+claim runtime readiness when checks fail or required tests skip.
+
 ## Kanban board workflow
 
-Work is tracked on the GitHub Projects kanban board ("Jager-C2 Roadmap") linked in the README, with repo issues as cards.
+Work items are repository issues. The accessible dashboard is issue #12,
+using exclusive status labels documented in docs/DEVELOPMENT.md. The existing
+GitHub Projects board remains linked but its access/automation is unverified.
+When Projects is unavailable, update status labels through the GitHub connector
+and continue authorized work; record the limitation instead of inventing state.
 
 ### Columns
 

@@ -1,5 +1,10 @@
 # Jager-C2
 
+> **Development preview — release qualification pending.** Current CI has known
+> failures. Review [release readiness](docs/RELEASE_READINESS.md) and
+> [documentation](docs/README.md) before relying on feature claims below.
+> Some CLI/MCP commands are placeholders; implementation does not imply validation.
+
 An open-source, agentic command-and-control framework built for authorized red team operations. Jager-C2 pairs a Go teamserver with a hardened C implant, a polymorphic Python build pipeline, and a first-class MCP server so AI agents can orchestrate engagements end to end.
 
 > **Disclaimer**: Jager-C2 is intended for authorized security testing, red team engagements, and research only. Unauthorized use against systems you do not own or have explicit written permission to test is illegal. The authors accept no liability for misuse.
@@ -73,33 +78,11 @@ Jager-C2/
 
 ## Quick Start
 
-### Docker (recommended)
+### Local management lab
 
-```bash
-cd deploy
-docker-compose up -d
-```
-
-Then start a listener:
-
-```bash
-curl -X POST http://localhost:31338/mgmt/listener/start \
-  -H "Content-Type: application/json" \
-  -d '{"transport":"https","host":"0.0.0.0","port":443}'
-```
-
-### Manual
-
-```bash
-# Build teamserver
-cd teamserver && go build -o jager-server ./cmd/jager-server
-
-# Start teamserver (dev mode, no mTLS)
-./jager-server --listen 0.0.0.0:50051 --dev
-
-# Generate implant
-python builder/build_implant.py --c2-url https://teamserver.example:443 --format exe
-```
+Follow [LOCAL_LAB.md](docs/LOCAL_LAB.md) for a loopback-only startup and health
+check using the actual server flags. The Docker Compose deployment is
+experimental and still requires authentication and clean-install validation.
 
 On Windows, use the build script:
 
@@ -136,7 +119,7 @@ Add the MCP server to your agent harness:
 ## Security Notes
 
 - Never commit API keys or build secrets; generated material lives under `data/` and is gitignored
-- Run the teamserver with TLS in production (`--tls-cert` / `--tls-key` or reverse-proxy termination)
+- Run the teamserver with TLS in production (`--mgmt-tls --cert <cert> --key <key>` for management TLS; configure `--ca` for gRPC mTLS)
 - All `/mgmt/*` routes except `/mgmt/ping` require the `X-Jager-C2-Api-Key` or `Authorization: Bearer` header
 - Rotate keys after operator turnover; each build gets a unique nonce and profile fingerprint, never reuse implants across engagements
 
@@ -155,6 +138,11 @@ pytest tests/
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/OPERATOR_GUIDE.md](docs/OPERATOR_GUIDE.md) for details.
 
+Development starts with docs, then failing tests, then implementation. See the
+[workflow](docs/DEVELOPMENT.md), [test strategy](docs/TESTING.md), and
+[issue Kanban](https://github.com/0xhackerfren/Jager-C2/issues/12). The existing
+Projects board below has not been verified through the current connection.
+
 Development workflow, board, and agent rules: [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md), and the [project kanban board](https://github.com/users/0xhackerfren/projects/2) track all open work.
 
 ## Roadmap
@@ -165,7 +153,7 @@ Development workflow, board, and agent rules: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Known Limitations
 
-- The MCP server's operator/engagement tooling (`mcp/tools/operator.py`) and the engagement profile engine (`builder/profile_engine.py`) import a shared profile library (`jager_shared`) that is not yet included in this repository. These modules are unwired in V1; the core teamserver, implant, builder, and MCP session/tasking tools work without them.
+- The MCP server's operator/engagement tooling (`mcp/tools/operator.py`) and the engagement profile engine (`builder/profile_engine.py`) import a shared profile library (`jager_shared`) that is not yet included in this repository. These modules require components outside this repository. Other components have failing build/test stages; see the release readiness checklist. CLI task shell/upload/download currently print messages, several list commands return empty tables, and campaign/AI tools include placeholders. Do not treat registration as support.
 
 ## License
 
