@@ -109,6 +109,8 @@ Module wiring status is documented in `mcp/tools/UNWIRED_README.md`.
 
 ## Security Model
 
+Management authentication fails closed when its key store or RBAC manager is missing; protected routes require a valid key and permission checks require an authenticated operator. See [management authentication](management-authentication.md).
+
 1. Operator auth: API keys (REST) and mTLS certificates (gRPC) with role-based permissions
 2. Implant auth: per-build crypto material bound at build time
 3. Kill date: implants self-destruct after engagement end

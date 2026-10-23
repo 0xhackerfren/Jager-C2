@@ -21,7 +21,7 @@ func authMiddleware(srv *Server, next http.Handler) http.Handler {
 			return
 		}
 
-		if srv == nil || srv.keyStore == nil {
+		if srv == nil || srv.keyStore == nil || srv.auth == nil {
 			http.Error(w, `{"error":"API key not configured"}`, http.StatusForbidden)
 			return
 		}
@@ -76,8 +76,9 @@ func constantTimeKeyMatch(got, expected string) bool {
 }
 
 func (m *ManagementAPI) requirePerm(w http.ResponseWriter, r *http.Request, perm auth.Permission) bool {
-	if m.srv.auth == nil {
-		return true
+	if m == nil || m.srv == nil || m.srv.auth == nil {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return false
 	}
 	op, _ := r.Context().Value(operatorCtxKey).(*auth.Operator)
 	if op == nil {

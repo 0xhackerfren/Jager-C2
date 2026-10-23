@@ -24,6 +24,14 @@ Evidence: [CI run 39434214859](https://github.com/0xhackerfren/Jager-C2/actions/
 Maintainer owns release sign-off. Each implementation issue must name an owner
 before moving to In Progress. Assigning an issue is not acceptance evidence.
 
+## Authentication follow-up candidate
+
+The `fix/authentication-regressions` branch supplies checked, isolated fixtures
+and denies requests when RBAC is missing. Its local Go 1.22.12 suite passes
+133 test cases twice. Qualification still requires review/merge and the
+remaining build, integration and deployment gates; the baseline table above
+records the original failures.
+
 ## Scope of the first reliable preview
 
 Stabilize existing management, authentication, documentation, CI and development
